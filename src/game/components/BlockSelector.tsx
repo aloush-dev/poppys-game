@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef } from "react";
 import block from "/assets/block_middle.png?url";
 import blockLeft from "/assets/block_left.png?url";
-import blockRight from "../../public/assets/block_right.png";
-import { EventBus } from "../game/EventBus";
+import blockRight from "/assets/block_right.png";
+import { EventBus } from "../EventBus";
 
 type BlockType = "block_middle" | "block_left" | "block_right";
 

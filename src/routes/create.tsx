@@ -1,8 +1,13 @@
+import { createFileRoute } from "@tanstack/react-router";
 import { useRef } from "react";
-import { IRefPhaserGame, PhaserGame } from "./game/PhaserGame";
-import { Toolbar } from "./components/Toolbar";
+import { IRefPhaserGame, PhaserGame } from "../game/PhaserGame";
+import { Toolbar } from "../game/components/Toolbar";
 
-function App() {
+export const Route = createFileRoute("/create")({
+    component: RouteComponent,
+});
+
+function RouteComponent() {
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
     return (
@@ -12,6 +17,4 @@ function App() {
         </div>
     );
 }
-
-export default App;
 

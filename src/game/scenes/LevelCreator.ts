@@ -1,7 +1,7 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { Block, BlockLeft, BlockRight } from "../tools/Block";
-import { ToolType } from "../../components/Toolbar";
+import { ToolType } from "../components/Toolbar";
 
 export class LevelCreator extends Scene {
     private selectedTool: ToolType | null = null;
