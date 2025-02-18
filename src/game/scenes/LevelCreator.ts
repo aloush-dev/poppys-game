@@ -6,7 +6,7 @@ import { ToolType } from "../../components/Toolbar";
 export class LevelCreator extends Scene {
     private selectedTool: ToolType | null = null;
     private elements: Block[] = [];
-    private gridSize: number = 32;
+    private gridSize: number = 30;
     private gridWidth: number = 32;
     private gridHeight: number = 32;
     private gridGraphics: Phaser.GameObjects.Graphics;

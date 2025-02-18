@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
-import block from "../../public/assets/block_middle.png";
-import blockLeft from "../../public/assets/block_left.png";
+import block from "/assets/block_middle.png?url";
+import blockLeft from "/assets/block_left.png?url";
 import blockRight from "../../public/assets/block_right.png";
 import { EventBus } from "../game/EventBus";
 
@@ -40,7 +40,7 @@ export default function BlockSelector() {
     return (
         <div className="relative">
             <button
-                className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
                 onMouseDown={handleTouchStart}
@@ -59,7 +59,7 @@ export default function BlockSelector() {
                     {Object.entries(blockIcons).map(([type, icon]) => (
                         <button
                             key={type}
-                            className="w-12 h-12 bg-gray-700 rounded-md flex items-center justify-center hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-10 h-10 bg-gray-700 rounded-md flex items-center justify-center hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             onClick={() => selectBlock(type as BlockType)}
                         >
                             <img
@@ -70,7 +70,7 @@ export default function BlockSelector() {
                         </button>
                     ))}
                     <button
-                        className="w-12 h-12 bg-gray-700 rounded-md flex items-center justify-center hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-10 h-10 bg-gray-700 rounded-md flex items-center justify-center hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         onClick={() => setShowSelector(false)}
                     >
                         ✕

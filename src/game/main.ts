@@ -5,14 +5,10 @@ import { LevelCreator } from "./scenes/LevelCreator";
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 const config: Phaser.Types.Core.GameConfig = {
     type: AUTO,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    scale: {
-        mode: Phaser.Scale.RESIZE,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-    },
+    width: 1025,
+    height: 1025,
     parent: "game-container",
-    backgroundColor: "#028af8",
+    backgroundColor: "#000000",
     scene: [LevelCreator],
 };
 
