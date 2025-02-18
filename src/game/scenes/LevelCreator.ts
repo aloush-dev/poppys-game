@@ -39,21 +39,21 @@ export class LevelCreator extends Scene {
                 element = new Block(
                     this,
                     Math.floor(x / this.gridSize) * this.gridSize,
-                    Math.floor(y / this.gridSize) * this.gridSize
+                    Math.floor(y / this.gridSize) * this.gridSize,
                 );
                 break;
             case "block_left":
                 element = new BlockLeft(
                     this,
                     Math.floor(x / this.gridSize) * this.gridSize,
-                    Math.floor(y / this.gridSize) * this.gridSize
+                    Math.floor(y / this.gridSize) * this.gridSize,
                 );
                 break;
             case "block_right":
                 element = new BlockRight(
                     this,
                     Math.floor(x / this.gridSize) * this.gridSize,
-                    Math.floor(y / this.gridSize) * this.gridSize
+                    Math.floor(y / this.gridSize) * this.gridSize,
                 );
                 break;
             default:
@@ -87,7 +87,7 @@ export class LevelCreator extends Scene {
             this.gridGraphics.moveTo(i * this.gridSize, 0);
             this.gridGraphics.lineTo(
                 i * this.gridSize,
-                this.gridHeight * this.gridSize
+                this.gridHeight * this.gridSize,
             );
         }
 
@@ -95,7 +95,7 @@ export class LevelCreator extends Scene {
             this.gridGraphics.moveTo(0, j * this.gridSize);
             this.gridGraphics.lineTo(
                 this.gridWidth * this.gridSize,
-                j * this.gridSize
+                j * this.gridSize,
             );
         }
 
@@ -105,5 +105,7 @@ export class LevelCreator extends Scene {
     private snapToGrid(value: number): number {
         return Math.floor(value / this.gridSize) * this.gridSize;
     }
+
+    private saveLevel() {}
 }
 
