@@ -27,11 +27,14 @@
         "build-nolog": "vite build --config vite/config.prod.mjs"
     },
     "dependencies": {
+        "@tailwindcss/vite": "^4.0.6",
         "phaser": "^3.88.2",
         "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "react-dom": "^18.2.0",
+        "tailwindcss": "^4.0.6"
     },
     "devDependencies": {
+        "@types/node": "^22.13.4",
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
         "@typescript-eslint/eslint-plugin": "^7.13.1",
