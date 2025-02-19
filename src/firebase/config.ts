@@ -6,12 +6,12 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyCKIDQEe8viQ4BjrB6SLJfW4sdIMX6e3SM",
-    authDomain: "poppys-world.firebaseapp.com",
-    projectId: "poppys-world",
-    storageBucket: "poppys-world.firebasestorage.app",
-    messagingSenderId: "758796036963",
-    appId: "1:758796036963:web:5a58973d333ef54a430156",
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase

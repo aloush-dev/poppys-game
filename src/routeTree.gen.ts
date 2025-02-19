@@ -14,7 +14,6 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as PlayImport } from './routes/play'
 import { Route as ExploreImport } from './routes/explore'
 import { Route as CreateImport } from './routes/create'
-import { Route as LayoutImport } from './routes/_layout'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
@@ -37,11 +36,6 @@ const CreateRoute = CreateImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const LayoutRoute = LayoutImport.update({
-  id: '/_layout',
-  getParentRoute: () => rootRoute,
-} as any)
-
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
@@ -57,13 +51,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/_layout': {
-      id: '/_layout'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof LayoutImport
       parentRoute: typeof rootRoute
     }
     '/create': {
@@ -94,7 +81,6 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '': typeof LayoutRoute
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/play': typeof PlayRoute
@@ -102,7 +88,6 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '': typeof LayoutRoute
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/play': typeof PlayRoute
@@ -111,7 +96,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/_layout': typeof LayoutRoute
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/play': typeof PlayRoute
@@ -119,16 +103,15 @@ export interface FileRoutesById {
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '' | '/create' | '/explore' | '/play'
+  fullPaths: '/' | '/create' | '/explore' | '/play'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '' | '/create' | '/explore' | '/play'
-  id: '__root__' | '/' | '/_layout' | '/create' | '/explore' | '/play'
+  to: '/' | '/create' | '/explore' | '/play'
+  id: '__root__' | '/' | '/create' | '/explore' | '/play'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LayoutRoute: typeof LayoutRoute
   CreateRoute: typeof CreateRoute
   ExploreRoute: typeof ExploreRoute
   PlayRoute: typeof PlayRoute
@@ -136,7 +119,6 @@ export interface RootRouteChildren {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LayoutRoute: LayoutRoute,
   CreateRoute: CreateRoute,
   ExploreRoute: ExploreRoute,
   PlayRoute: PlayRoute,
@@ -153,7 +135,6 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/_layout",
         "/create",
         "/explore",
         "/play"
@@ -161,9 +142,6 @@ export const routeTree = rootRoute
     },
     "/": {
       "filePath": "index.tsx"
-    },
-    "/_layout": {
-      "filePath": "_layout.tsx"
     },
     "/create": {
       "filePath": "create.tsx"
