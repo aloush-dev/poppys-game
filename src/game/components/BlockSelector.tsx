@@ -31,7 +31,6 @@ export default function BlockSelector() {
     }, []);
 
     const selectBlock = useCallback((block: BlockType) => {
-        console.log(block);
         setSelectedBlock(block);
         EventBus.emit("toolSelected", block);
         setShowSelector(false);

@@ -11,9 +11,15 @@ function RouteComponent() {
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
     return (
-        <div className="flex items-center relative w-screen justify-center bg-slate-900">
-            <PhaserGame ref={phaserRef} />
-            <Toolbar />
+        <div className="flex items-center justify-center min-h-screen w-full bg-slate-900 p-4">
+            <div className="flex gap-4 w-full max-w-[960px]">
+                <div className="flex justify-center">
+                    <Toolbar />
+                </div>
+                <div className="relative w-full aspect-[3/2]">
+                    <PhaserGame ref={phaserRef} />
+                </div>
+            </div>
         </div>
     );
 }

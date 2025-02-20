@@ -23,13 +23,11 @@ export const Header = () => {
                             </Link>
                         </li>
                         <li>
-                            <Link to="/explore" className="hover:text-orange-300">
+                            <Link
+                                to="/explore"
+                                className="hover:text-orange-300"
+                            >
                                 Explore
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="#" className="hover:text-orange-300">
-                                Profile
                             </Link>
                         </li>
                     </ul>
