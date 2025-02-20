@@ -1,5 +1,6 @@
 export class Block extends Phaser.GameObjects.Image {
     public blockType: "block_middle" | "block_left" | "block_right";
+    public body: Phaser.Physics.Arcade.StaticBody;
 
     constructor(
         scene: Phaser.Scene,
@@ -10,30 +11,35 @@ export class Block extends Phaser.GameObjects.Image {
         super(scene, x, y, type);
         this.blockType = type;
 
-        // Initialize the block
         this.setOrigin(0, 0);
         this.setDisplaySize(32, 32);
 
-        // Add to scene and enable interactions
         scene.add.existing(this);
-        this.setInteractive();
-        scene.input.setDraggable(this);
+        scene.physics.add.existing(this, true);
+        this.body = this.body as Phaser.Physics.Arcade.StaticBody;
 
-        // Add drag events
-        scene.input.on(
-            "drag",
-            (
-                pointer: Phaser.Input.Pointer,
-                gameObject: Block,
-                dragX: number,
-                dragY: number,
-            ) => {
-                if (gameObject === this) {
-                    const snappedX = Math.floor(dragX / 32) * 32;
-                    const snappedY = Math.floor(dragY / 32) * 32;
-                    this.setPosition(snappedX, snappedY);
-                }
-            },
-        );
+        if (scene.scene.key === "LevelEditor") {
+            this.setInteractive();
+            scene.input.setDraggable(this);
+
+            scene.input.on(
+                "drag",
+                (
+                    pointer: Phaser.Input.Pointer,
+                    gameObject: Block,
+                    dragX: number,
+                    dragY: number,
+                ) => {
+                    if (gameObject === this) {
+                        const snappedX = Math.floor(dragX / 32) * 32;
+                        const snappedY = Math.floor(dragY / 32) * 32;
+                        this.setPosition(snappedX, snappedY);
+                        this.body.position.set(snappedX, snappedY);
+                        this.body.updateFromGameObject();
+                    }
+                },
+            );
+        }
     }
 }
+

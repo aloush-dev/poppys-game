@@ -17,7 +17,7 @@ function RouteComponent() {
                     <Toolbar />
                 </div>
                 <div className="relative w-full aspect-[3/2]">
-                    <PhaserGame ref={phaserRef} />
+                    <PhaserGame ref={phaserRef} scene="create" />
                 </div>
             </div>
         </div>

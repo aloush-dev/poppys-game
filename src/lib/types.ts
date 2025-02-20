@@ -2,10 +2,17 @@ export interface LevelData {
     id?: string;
     name: string;
     blocks: BlockData[];
-    startPoint?: PointData;
-    endPoint?: PointData;
+    startPoint: PointData;
+    endPoint: PointData;
     creator: string;
     createdAt: number;
+}
+
+export interface TempLevelData {
+    id?: string;
+    blocks: BlockData[];
+    startPoint: PointData;
+    endPoint: PointData;
 }
 
 export interface BlockData {

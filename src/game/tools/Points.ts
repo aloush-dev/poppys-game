@@ -9,7 +9,7 @@ export class StartPoint extends Phaser.GameObjects.Sprite {
         this.setInteractive();
         scene.input.setDraggable(this);
 
-        this.play("portal_anim");
+        this.play("start_portal");
 
         scene.input.on(
             "drag",
@@ -29,7 +29,7 @@ export class StartPoint extends Phaser.GameObjects.Sprite {
     }
 }
 
-export class EndPoint extends Phaser.GameObjects.Image {
+export class EndPoint extends Phaser.GameObjects.Sprite {
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, "end");
         this.setOrigin(0, 0);
@@ -37,6 +37,8 @@ export class EndPoint extends Phaser.GameObjects.Image {
         scene.add.existing(this);
         this.setInteractive();
         scene.input.setDraggable(this);
+
+        this.play("end_portal");
 
         // Add drag events with grid snapping
         scene.input.on(

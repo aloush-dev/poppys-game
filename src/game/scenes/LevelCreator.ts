@@ -2,7 +2,7 @@ import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { Block } from "../tools/Block";
 import { ToolType } from "../components/Toolbar";
-import { BlockData, LevelData } from "../../lib/types";
+import { BlockData, LevelData, TempLevelData } from "../../lib/types";
 import { EndPoint, StartPoint } from "../tools/Points";
 import { SaveLevel } from "../../firebase/firestore";
 
@@ -25,8 +25,11 @@ export class LevelCreator extends Scene {
         this.load.image("block_middle", "assets/block_middle.png");
         this.load.image("block_left", "assets/block_left.png");
         this.load.image("block_right", "assets/block_right.png");
-        this.load.image("end", "assets/end.png");
         this.load.spritesheet("start", "assets/portal_green.png", {
+            frameWidth: 32,
+            frameHeight: 32,
+        });
+        this.load.spritesheet("end", "assets/portal_blue.png", {
             frameWidth: 32,
             frameHeight: 32,
         });
@@ -47,10 +50,20 @@ export class LevelCreator extends Scene {
         this.input.on("pointerdown", this.handlePointerDown, this);
 
         this.anims.create({
-            key: "portal_anim",
+            key: "start_portal",
             frames: this.anims.generateFrameNumbers("start", {
                 start: 0,
-                end: 6,
+                end: 5,
+            }),
+            frameRate: 10,
+            repeat: -1,
+        });
+
+        this.anims.create({
+            key: "end_portal",
+            frames: this.anims.generateFrameNumbers("end", {
+                start: 0,
+                end: 5,
             }),
             frameRate: 10,
             repeat: -1,
@@ -141,7 +154,7 @@ export class LevelCreator extends Scene {
         );
     }
 
-    private async saveLevel(levelName: string, userId: string) {
+    private async publishLevel(levelName: string, userId: string) {
         if (!this.startPoint || !this.endPoint) {
             EventBus.emit("error", "Level must have start and end points");
             return;
@@ -168,6 +181,38 @@ export class LevelCreator extends Scene {
 
         try {
             await SaveLevel(levelData);
+            EventBus.emit("levelPublished");
+        } catch (error) {
+            EventBus.emit("error", "Failed to publish level");
+        }
+    }
+
+    private async saveLevel() {
+
+        console.log('saving');
+        if (!this.startPoint || !this.endPoint) {
+            EventBus.emit("error", "Level must have start and end points");
+            return;
+        }
+
+        const levelData: TempLevelData = {
+            blocks: this.elements.map((block) => ({
+                x: block.x,
+                y: block.y,
+                type: block.type,
+            })),
+            startPoint: {
+                x: this.startPoint.x,
+                y: this.startPoint.y,
+            },
+            endPoint: {
+                x: this.endPoint.x,
+                y: this.endPoint.y,
+            },
+        };
+
+        try {
+            localStorage.setItem("tempLevel", JSON.stringify(levelData));
             EventBus.emit("levelSaved");
         } catch (error) {
             EventBus.emit("error", "Failed to save level");
