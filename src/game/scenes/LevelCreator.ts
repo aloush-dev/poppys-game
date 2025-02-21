@@ -7,14 +7,14 @@ import { EndPoint, StartPoint } from "../tools/Points";
 import { SaveLevel } from "../../firebase/firestore";
 
 export class LevelCreator extends Scene {
-    private selectedTool: ToolType | null = null;
+    private levelTheme: "forrest" | "desert" | "space" = "forrest";
+    public selectedTool: ToolType | null = null;
     private elements: BlockData[] = [];
     private startPoint: StartPoint | null = null;
     private endPoint: EndPoint | null = null;
     private gridSize: number = 32;
     private gridColumns: number;
     private gridRows: number;
-    private displayScale: number = 1;
     private gridGraphics: Phaser.GameObjects.Graphics;
 
     constructor() {
@@ -46,7 +46,7 @@ export class LevelCreator extends Scene {
         this.drawGrid();
 
         EventBus.on("toolSelected", this.onToolSelected, this);
-        EventBus.on("saveLevel", this.saveLevel, this);
+        EventBus.on("saveLevel", () => this.saveLevel());
         this.input.on("pointerdown", this.handlePointerDown, this);
 
         this.anims.create({
@@ -114,9 +114,17 @@ export class LevelCreator extends Scene {
                 });
                 break;
             }
-            // case "erase":
-            //     this.eraseElementsAt(x, y);
-            //     break;
+            case "delete": {
+                const block = this.elements.find(
+                    (block) => block.x === x && block.y === y,
+                );
+                if (block) {
+                    this.elements = this.elements.filter(
+                        (block) => block.x !== x || block.y !== y,
+                    );
+                }
+                break;
+            }
         }
     }
 
@@ -188,13 +196,10 @@ export class LevelCreator extends Scene {
     }
 
     private async saveLevel() {
-
-        console.log('saving');
         if (!this.startPoint || !this.endPoint) {
             EventBus.emit("error", "Level must have start and end points");
             return;
         }
-
         const levelData: TempLevelData = {
             blocks: this.elements.map((block) => ({
                 x: block.x,
@@ -210,38 +215,24 @@ export class LevelCreator extends Scene {
                 y: this.endPoint.y,
             },
         };
-
         try {
             localStorage.setItem("tempLevel", JSON.stringify(levelData));
             EventBus.emit("levelSaved");
         } catch (error) {
+            console.log(error);
             EventBus.emit("error", "Failed to save level");
         }
     }
 
-    // private eraseElementsAt(x: number, y: number) {
-    //     // Remove blocks at position
-    //     this.elements = this.elements.filter((block) => {
-    //         if (block.x === x && block.y === y) {
-    //             block.destroy();
-    //             return false;
-    //         }
-    //         return true;
-    //     });
-
-    //     // Remove start/end points if they're at position
-    //     if (
-    //         this.startPoint &&
-    //         this.startPoint.x === x &&
-    //         this.startPoint.y === y
-    //     ) {
-    //         this.startPoint.destroy();
-    //         this.startPoint = null;
-    //     }
-    //     if (this.endPoint && this.endPoint.x === x && this.endPoint.y === y) {
-    //         this.endPoint.destroy();
-    //         this.endPoint = null;
-    //     }
-    // }
+    private deleteElement(x: number, y: number) {
+        const block = this.elements.find(
+            (block) => block.x === x && block.y === y,
+        );
+        if (block) {
+            this.elements = this.elements.filter(
+                (block) => block.x !== x || block.y !== y,
+            );
+        }
+    }
 }
 

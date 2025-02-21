@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+
+@theme {
+    --spacing-noheader-screen : calc(100vh - 4rem);
+}

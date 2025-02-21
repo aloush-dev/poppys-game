@@ -11,7 +11,7 @@ function RouteComponent() {
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
     return (
-        <div className="flex items-center justify-center min-h-screen w-full bg-slate-900 p-4">
+        <div className="flex items-center justify-center h-noheader-screen w-full bg-slate-900 p-4">
             <div className="flex gap-4 w-full max-w-[960px]">
                 <div className="flex justify-center">
                     <Toolbar />

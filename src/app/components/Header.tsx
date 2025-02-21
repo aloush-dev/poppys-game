@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 export const Header = () => {
     return (
-        <header className="bg-blue-600 text-white shadow-lg">
+        <header className="bg-blue-600 text-white shadow-lg h-[4rem]">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                 <Link to="/" className="">
                     <h1 className="text-2xl font-bold">Poppy's World</h1>
