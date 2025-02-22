@@ -97,7 +97,7 @@ export const Toolbar = () => {
                 <button
                     className="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs"
                     onClick={() => {
-                        EventBus.emit();
+                        EventBus.emit("testLevel");
                     }}
                 >
                     TEST

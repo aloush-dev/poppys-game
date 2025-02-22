@@ -8,6 +8,7 @@ import { SaveLevel } from "../../firebase/firestore";
 
 export class LevelCreator extends Scene {
     private levelTheme: "forrest" | "desert" | "space" = "forrest";
+    private LevelData: LevelData | TempLevelData;
     public selectedTool: ToolType | null = null;
     private elements: BlockData[] = [];
     private startPoint: StartPoint | null = null;
@@ -18,7 +19,11 @@ export class LevelCreator extends Scene {
     private gridGraphics: Phaser.GameObjects.Graphics;
 
     constructor() {
-        super("LevelEditor");
+        super({ key: "LevelCreator" });
+    }
+
+    init() {
+        this.registry.query("levelData");
     }
 
     preload() {
@@ -68,6 +73,8 @@ export class LevelCreator extends Scene {
             frameRate: 10,
             repeat: -1,
         });
+
+        EventBus.on("testLevel", () => this.testLevel(), this);
 
         EventBus.emit("current-scene-ready", this);
     }
@@ -221,6 +228,47 @@ export class LevelCreator extends Scene {
         } catch (error) {
             console.log(error);
             EventBus.emit("error", "Failed to save level");
+        }
+    }
+
+    private testLevel() {
+        if (!this.startPoint) {
+            EventBus.emit("error", "Level must have a start point");
+            return;
+        }
+
+        const levelData = {
+            blocks: this.elements,
+            startPoint: {
+                x: this.startPoint.x,
+                y: this.startPoint.y,
+            },
+            endPoint: {
+                x: this.endPoint?.x,
+                y: this.endPoint?.y,
+            },
+        };
+
+        localStorage.setItem("editorState", JSON.stringify(levelData));
+
+        this.scene.start("PlayGame", { levelData, isTest: true });
+    }
+
+    private returnFromTest() {
+        const savedState = localStorage.getItem("editorState");
+        if (savedState) {
+            const levelData = JSON.parse(savedState);
+            this.elements = levelData.blocks;
+            this.startPoint = new StartPoint(
+                this,
+                levelData.startPoint.x,
+                levelData.startPoint.y,
+            );
+            this.endPoint = new EndPoint(
+                this,
+                levelData.endPoint.x,
+                levelData.endPoint.y,
+            );
         }
     }
 

@@ -1,13 +1,19 @@
+import { LevelCreator } from "../scenes/LevelCreator";
+
 export class StartPoint extends Phaser.GameObjects.Sprite {
+    public body: Phaser.Physics.Arcade.StaticBody;
+
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, "start");
 
         this.setOrigin(0, 0);
         this.setDisplaySize(32, 32);
+        this.body = this.body as Phaser.Physics.Arcade.StaticBody;
 
         scene.add.existing(this);
         this.setInteractive();
         scene.input.setDraggable(this);
+
 
         this.play("start_portal");
 
@@ -19,10 +25,15 @@ export class StartPoint extends Phaser.GameObjects.Sprite {
                 dragX: number,
                 dragY: number,
             ) => {
-                if (gameObject === this) {
+                if (
+                    gameObject === this &&
+                    (scene as LevelCreator).selectedTool === "select"
+                ) {
                     const snappedX = Math.floor(dragX / 32) * 32;
                     const snappedY = Math.floor(dragY / 32) * 32;
                     this.setPosition(snappedX, snappedY);
+                    this.body.position.set(snappedX, snappedY);
+                    this.body.updateFromGameObject();
                 }
             },
         );
@@ -30,8 +41,12 @@ export class StartPoint extends Phaser.GameObjects.Sprite {
 }
 
 export class EndPoint extends Phaser.GameObjects.Sprite {
+    public body: Phaser.Physics.Arcade.StaticBody;
+
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, "end");
+        this.body = this.body as Phaser.Physics.Arcade.StaticBody;
+
         this.setOrigin(0, 0);
         this.setDisplaySize(32, 32);
         scene.add.existing(this);
@@ -40,7 +55,6 @@ export class EndPoint extends Phaser.GameObjects.Sprite {
 
         this.play("end_portal");
 
-        // Add drag events with grid snapping
         scene.input.on(
             "drag",
             (
@@ -49,10 +63,15 @@ export class EndPoint extends Phaser.GameObjects.Sprite {
                 dragX: number,
                 dragY: number,
             ) => {
-                if (gameObject === this) {
+                if (
+                    gameObject === this &&
+                    (scene as LevelCreator).selectedTool === "select"
+                ) {
                     const snappedX = Math.floor(dragX / 32) * 32;
                     const snappedY = Math.floor(dragY / 32) * 32;
                     this.setPosition(snappedX, snappedY);
+                    this.body.position.set(snappedX, snappedY);
+                    this.body.updateFromGameObject();
                 }
             },
         );

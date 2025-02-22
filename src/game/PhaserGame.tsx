@@ -2,6 +2,7 @@ import { Game } from "phaser";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { LevelCreator } from "./scenes/LevelCreator";
 import { PlayGame } from "./scenes/PlayGame";
+import { useLevelData } from "../lib/useLevelData";
 
 export interface IRefPhaserGame {
     game: Game | null;
@@ -15,6 +16,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, PhaserGameProps>(
     ({ scene }, ref) => {
         const gameRef = useRef<Game | null>(null);
         const containerRef = useRef<HTMLDivElement>(null);
+        const { levelData, setLevelData } = useLevelData();
 
         useImperativeHandle(ref, () => ({
             game: gameRef.current,
@@ -39,7 +41,13 @@ export const PhaserGame = forwardRef<IRefPhaserGame, PhaserGameProps>(
                         debug: process.env.NODE_ENV === "development",
                     },
                 },
-                scene: scene === "create" ? LevelCreator : PlayGame,
+                scene: [LevelCreator, PlayGame],
+                callbacks: {
+                    preBoot: (game) => {
+                        game.registry.set("levelData", levelData);
+                        game.registry.set("setLevelData", setLevelData);
+                    },
+                },
             };
 
             gameRef.current = new Game(config);

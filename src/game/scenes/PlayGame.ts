@@ -9,6 +9,7 @@ export class PlayGame extends Scene {
     private camera: Phaser.Cameras.Scene2D.Camera;
     private blocks: Block[] = [];
     private endPoint: EndPoint;
+    private isTestMode: boolean = false;
 
     private player: Phaser.Physics.Arcade.Sprite;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -18,14 +19,17 @@ export class PlayGame extends Scene {
     private readonly JUMP_VELOCITY = -330;
 
     constructor() {
-        super("Game");
+        super({ key: "PlayGame" });
     }
 
-    init(data: { levelData: LevelData }) {
+    init(data: { levelData: LevelData; isTest?: boolean }) {
+        this.isTestMode = data.isTest || false;
         const tempLevel = localStorage.getItem("tempLevel");
         this.levelData = tempLevel
             ? (JSON.parse(tempLevel) as TempLevelData)
             : data.levelData;
+
+        this.createLevel();
     }
 
     preload() {
@@ -107,7 +111,21 @@ export class PlayGame extends Scene {
 
         this.player.anims.play("idle", true);
 
-        this.createLevel();
+        if (this.isTestMode) {
+            this.add
+                .text(16, 16, "Return to Editor", {
+                    backgroundColor: "#444",
+                    padding: { x: 10, y: 5 },
+                    color: "#ffffff",
+                })
+                .setScrollFactor(0)
+                .setDepth(1000)
+                .setInteractive()
+                .on("pointerdown", () => {
+                    this.scene.start("LevelCreator");
+                    EventBus.emit("returnToEditor");
+                });
+        }
 
         EventBus.emit("current-scene-ready", this);
     }
@@ -145,11 +163,13 @@ export class PlayGame extends Scene {
             this.blocks.push(new Block(this, block.x, block.y, block.type));
         });
 
-        this.endPoint = new EndPoint(
-            this,
-            this.levelData.endPoint.x,
-            this.levelData.endPoint.y,
-        );
+        if (this.endPoint) {
+            this.endPoint = new EndPoint(
+                this,
+                this.levelData.endPoint.x,
+                this.levelData.endPoint.y,
+            );
+        }
     }
 }
 
