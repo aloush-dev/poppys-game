@@ -4,19 +4,15 @@ export class StartPoint extends Phaser.GameObjects.Sprite {
     public body: Phaser.Physics.Arcade.StaticBody;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, "start");
+        super(scene, x + 16, y + 16, "start");
 
-        this.setOrigin(0, 0);
+        this.setOrigin(0.5, 0.5);
         this.setDisplaySize(32, 32);
         this.body = this.body as Phaser.Physics.Arcade.StaticBody;
 
         scene.add.existing(this);
         this.setInteractive();
         scene.input.setDraggable(this);
-
-
-        this.play("start_portal");
-
         scene.input.on(
             "drag",
             (
@@ -52,9 +48,6 @@ export class EndPoint extends Phaser.GameObjects.Sprite {
         scene.add.existing(this);
         this.setInteractive();
         scene.input.setDraggable(this);
-
-        this.play("end_portal");
-
         scene.input.on(
             "drag",
             (

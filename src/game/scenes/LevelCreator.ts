@@ -1,85 +1,169 @@
 import { Scene } from "phaser";
 import { EventBus } from "../EventBus";
 import { Block } from "../tools/Block";
-import { ToolType } from "../components/Toolbar";
-import { BlockData, LevelData, TempLevelData } from "../../lib/types";
+import { LevelData, LevelThemes, EditorTool } from "../../lib/types";
 import { EndPoint, StartPoint } from "../tools/Points";
-import { SaveLevel } from "../../firebase/firestore";
+import { gameThemes } from "../../lib/gameThemes";
+// import { SaveLevel } from "../../firebase/firestore";
 
 export class LevelCreator extends Scene {
-    private levelTheme: "forrest" | "desert" | "space" = "forrest";
-    private LevelData: LevelData | TempLevelData;
-    public selectedTool: ToolType | null = null;
-    private elements: BlockData[] = [];
+    private levelTheme: LevelThemes = "standard";
+    private levelData: LevelData;
+    public selectedTool: EditorTool | null = null;
+    private blocks: Block[] = [];
     private startPoint: StartPoint | null = null;
     private endPoint: EndPoint | null = null;
     private gridSize: number = 32;
     private gridColumns: number;
     private gridRows: number;
     private gridGraphics: Phaser.GameObjects.Graphics;
+    private currentRotation: number = 0;
 
     constructor() {
         super({ key: "LevelCreator" });
     }
 
-    init() {
-        this.registry.query("levelData");
+    init(data: LevelData) {
+        if (data) {
+            this.levelData = data;
+        }
     }
 
     preload() {
-        this.load.image("block_middle", "assets/block_middle.png");
-        this.load.image("block_left", "assets/block_left.png");
-        this.load.image("block_right", "assets/block_right.png");
-        this.load.spritesheet("start", "assets/portal_green.png", {
-            frameWidth: 32,
-            frameHeight: 32,
+        const themeConfig = gameThemes[this.levelTheme];
+
+        themeConfig.blocks.forEach((block) => {
+            this.load.image(
+                block.id,
+                `assets/theme_${this.levelTheme}/${block.asset}`,
+            );
         });
-        this.load.spritesheet("end", "assets/portal_blue.png", {
-            frameWidth: 32,
-            frameHeight: 32,
-        });
+
+        this.load.image(
+            "start",
+            `assets/theme_${this.levelTheme}/${themeConfig.startPoint}`,
+        );
+        this.load.image(
+            "end",
+            `assets/theme_${this.levelTheme}/${themeConfig.endPoint}`,
+        );
+
+        this.load.image(
+            "background",
+            `assets/theme_${this.levelTheme}/background.png`,
+        );
     }
 
     create() {
         const gameWidth = this.cameras.main.width;
         const gameHeight = this.cameras.main.height;
-
         this.gridColumns = Math.floor(gameWidth / this.gridSize);
         this.gridRows = Math.floor(gameHeight / this.gridSize);
 
         this.gridGraphics = this.add.graphics();
         this.drawGrid();
 
+        if (this.levelData) {
+            this.setupLevel(this.levelData);
+        }
+
+        EventBus.on("themeChanged", this.handleThemeChange, this);
         EventBus.on("toolSelected", this.onToolSelected, this);
-        EventBus.on("saveLevel", () => this.saveLevel());
         this.input.on("pointerdown", this.handlePointerDown, this);
-
-        this.anims.create({
-            key: "start_portal",
-            frames: this.anims.generateFrameNumbers("start", {
-                start: 0,
-                end: 5,
-            }),
-            frameRate: 10,
-            repeat: -1,
-        });
-
-        this.anims.create({
-            key: "end_portal",
-            frames: this.anims.generateFrameNumbers("end", {
-                start: 0,
-                end: 5,
-            }),
-            frameRate: 10,
-            repeat: -1,
-        });
-
         EventBus.on("testLevel", () => this.testLevel(), this);
+        EventBus.on("rotate", this.handleRotate, this);
 
-        EventBus.emit("current-scene-ready", this);
+        // EventBus.emit("current-scene-ready", this);
     }
 
-    private onToolSelected(tool: ToolType) {
+    shutdown() {
+        EventBus.off("themeChanged", this.handleThemeChange);
+        EventBus.off("toolSelected", this.onToolSelected);
+        EventBus.off("testLevel");
+        EventBus.off("rotate", this.handleRotate);
+    }
+
+    private handleThemeChange = (newTheme: LevelThemes) => {
+        const currentState = {
+            blocks: this.blocks.map((block) => ({
+                x: block.x,
+                y: block.y,
+                blockId: block.blockId,
+                rotation: block.rotation,
+            })),
+            startPoint: this.startPoint
+                ? {
+                      x: this.startPoint.x,
+                      y: this.startPoint.y,
+                  }
+                : undefined,
+            endPoint: this.endPoint
+                ? {
+                      x: this.endPoint.x,
+                      y: this.endPoint.y,
+                  }
+                : undefined,
+            theme: newTheme,
+            name: "temp",
+            creator: "temp",
+            createdAt: Date.now(),
+        };
+
+        this.levelTheme = newTheme;
+        this.scene.restart(currentState);
+    };
+
+    private setupLevel(state: LevelData) {
+        const themeConfig = gameThemes[state.theme || this.levelTheme];
+
+        if (state.theme) {
+            this.levelTheme = state.theme;
+        }
+
+        if (state.blocks) {
+            this.blocks = state.blocks
+                .map((blockData) => {
+                    const blockConfig = themeConfig.blocks.find(
+                        (config) => config.id === blockData.blockId,
+                    );
+
+                    if (!blockConfig) {
+                        console.warn(
+                            `Block config not found for id: ${blockData.blockId}`,
+                        );
+                        return null;
+                    }
+
+                    return new Block(
+                        this,
+                        blockData.x,
+                        blockData.y,
+                        this.levelTheme,
+                        blockConfig,
+                        blockData.rotation || 0,
+                    );
+                })
+                .filter((block): block is Block => block !== null);
+        }
+
+        if (state.startPoint) {
+            this.startPoint = new StartPoint(
+                this,
+                state.startPoint.x,
+                state.startPoint.y,
+            );
+        }
+
+        if (state.endPoint) {
+            this.endPoint = new EndPoint(
+                this,
+                state.endPoint.x,
+                state.endPoint.y,
+            );
+        }
+    }
+
+    private onToolSelected(tool: EditorTool) {
         this.selectedTool = tool;
     }
 
@@ -98,6 +182,24 @@ export class LevelCreator extends Scene {
         const x = this.snapToGrid(pointer.x);
         const y = this.snapToGrid(pointer.y);
 
+        const themeConfig = gameThemes[this.levelTheme];
+
+        const blockConfig = themeConfig.blocks.find(
+            (block) => block.id === this.selectedTool,
+        );
+
+        if (blockConfig) {
+            const block = new Block(
+                this,
+                x,
+                y,
+                this.levelTheme,
+                blockConfig,
+                this.currentRotation,
+            );
+            this.blocks.push(block);
+            return;
+        }
         switch (this.selectedTool) {
             case "start":
                 if (this.startPoint) this.startPoint.destroy();
@@ -107,28 +209,21 @@ export class LevelCreator extends Scene {
                 if (this.endPoint) this.endPoint.destroy();
                 this.endPoint = new EndPoint(this, x, y);
                 break;
-            case "block_middle":
-            case "block_left":
-            case "block_right": {
-                const block = new Block(this, x, y, this.selectedTool);
-                this.elements.push({
-                    x: block.x,
-                    y: block.y,
-                    type: block.blockType as
-                        | "block_middle"
-                        | "block_left"
-                        | "block_right",
-                });
-                break;
-            }
             case "delete": {
-                const block = this.elements.find(
+                const block = this.blocks.find(
                     (block) => block.x === x && block.y === y,
                 );
                 if (block) {
-                    this.elements = this.elements.filter(
-                        (block) => block.x !== x || block.y !== y,
-                    );
+                    block.destroy();
+                    this.blocks = this.blocks.filter((b) => b !== block);
+                }
+                if (this.startPoint?.x === x && this.startPoint?.y === y) {
+                    this.startPoint.destroy();
+                    this.startPoint = null;
+                }
+                if (this.endPoint?.x === x && this.endPoint?.y === y) {
+                    this.endPoint.destroy();
+                    this.endPoint = null;
                 }
                 break;
             }
@@ -169,118 +264,81 @@ export class LevelCreator extends Scene {
         );
     }
 
-    private async publishLevel(levelName: string, userId: string) {
-        if (!this.startPoint || !this.endPoint) {
-            EventBus.emit("error", "Level must have start and end points");
-            return;
-        }
+    // private async publishLevel(levelName: string, userId: string) {
+    //     if (!this.startPoint || !this.endPoint) {
+    //         EventBus.emit("error", "Level must have start and end points");
+    //         return;
+    //     }
 
-        const levelData: LevelData = {
-            name: levelName,
-            blocks: this.elements.map((block) => ({
-                x: block.x,
-                y: block.y,
-                type: block.type,
-            })),
-            startPoint: {
-                x: this.startPoint.x,
-                y: this.startPoint.y,
-            },
-            endPoint: {
-                x: this.endPoint.x,
-                y: this.endPoint.y,
-            },
-            creator: userId,
-            createdAt: Date.now(),
-        };
+    //     const levelData: LevelData = {
+    //         name: levelName,
+    //         blocks: this.blocks.map((block) => ({
+    //             x: block.x,
+    //             y: block.y,
+    //             type: block.type,
+    //         })),
+    //         startPoint: {
+    //             x: this.startPoint.x,
+    //             y: this.startPoint.y,
+    //         },
+    //         endPoint: {
+    //             x: this.endPoint.x,
+    //             y: this.endPoint.y,
+    //         },
+    //         creator: userId,
+    //         createdAt: Date.now(),
+    //         theme: this.levelTheme,
+    //     };
 
-        try {
-            await SaveLevel(levelData);
-            EventBus.emit("levelPublished");
-        } catch (error) {
-            EventBus.emit("error", "Failed to publish level");
-        }
-    }
-
-    private async saveLevel() {
-        if (!this.startPoint || !this.endPoint) {
-            EventBus.emit("error", "Level must have start and end points");
-            return;
-        }
-        const levelData: TempLevelData = {
-            blocks: this.elements.map((block) => ({
-                x: block.x,
-                y: block.y,
-                type: block.type,
-            })),
-            startPoint: {
-                x: this.startPoint.x,
-                y: this.startPoint.y,
-            },
-            endPoint: {
-                x: this.endPoint.x,
-                y: this.endPoint.y,
-            },
-        };
-        try {
-            localStorage.setItem("tempLevel", JSON.stringify(levelData));
-            EventBus.emit("levelSaved");
-        } catch (error) {
-            console.log(error);
-            EventBus.emit("error", "Failed to save level");
-        }
-    }
+    //     try {
+    //         await SaveLevel(levelData);
+    //         EventBus.emit("levelPublished");
+    //     } catch (error) {
+    //         EventBus.emit("error", "Failed to publish level");
+    //     }
+    // }
 
     private testLevel() {
         if (!this.startPoint) {
-            EventBus.emit("error", "Level must have a start point");
+            // EventBus.emit("error", "Level must have a start point");
             return;
         }
 
-        const levelData = {
-            blocks: this.elements,
-            startPoint: {
-                x: this.startPoint.x,
-                y: this.startPoint.y,
-            },
-            endPoint: {
-                x: this.endPoint?.x,
-                y: this.endPoint?.y,
-            },
+        const gameState = {
+            testMode: true,
+            blocks: this.blocks.map((block) => ({
+                x: block.x,
+                y: block.y,
+                blockId: block.blockId,
+                rotation: block.rotation,
+            })),
+            startPoint: this.startPoint
+                ? {
+                      x: this.startPoint.x,
+                      y: this.startPoint.y,
+                  }
+                : undefined,
+            endPoint: this.endPoint
+                ? {
+                      x: this.endPoint.x,
+                      y: this.endPoint.y,
+                  }
+                : undefined,
+            theme: this.levelTheme,
         };
-
-        localStorage.setItem("editorState", JSON.stringify(levelData));
-
-        this.scene.start("PlayGame", { levelData, isTest: true });
-    }
-
-    private returnFromTest() {
-        const savedState = localStorage.getItem("editorState");
-        if (savedState) {
-            const levelData = JSON.parse(savedState);
-            this.elements = levelData.blocks;
-            this.startPoint = new StartPoint(
-                this,
-                levelData.startPoint.x,
-                levelData.startPoint.y,
-            );
-            this.endPoint = new EndPoint(
-                this,
-                levelData.endPoint.x,
-                levelData.endPoint.y,
-            );
+        if (this.startPoint) {
+            this.scene.start("PlayGame", gameState);
         }
     }
 
-    private deleteElement(x: number, y: number) {
-        const block = this.elements.find(
-            (block) => block.x === x && block.y === y,
-        );
-        if (block) {
-            this.elements = this.elements.filter(
-                (block) => block.x !== x || block.y !== y,
-            );
-        }
+    public setTheme(theme: LevelThemes) {
+        this.levelTheme = theme;
+        this.scene.restart();
     }
+
+    private handleRotate = () => {
+        this.currentRotation = (this.currentRotation + 90) % 360;
+        EventBus.emit("rotationChanged", this.currentRotation);
+    };
 }
 

@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
-import { LevelDataProvider } from "./lib/LevelDataContext";
+import { AuthProvider } from "./lib/AuthContext";
 
 const router = createRouter({ routeTree });
 
@@ -14,9 +14,9 @@ declare module "@tanstack/react-router" {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-        <LevelDataProvider>
-            <RouterProvider router={router} />
-        </LevelDataProvider>
+        <AuthProvider>
+                <RouterProvider router={router} />
+        </AuthProvider>
     </React.StrictMode>,
 );
 

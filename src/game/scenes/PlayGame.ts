@@ -1,19 +1,17 @@
-import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
-import { LevelData, TempLevelData } from "../../lib/types";
 import { Block } from "../tools/Block";
-import { EndPoint } from "../tools/Points";
+import { EndPoint, StartPoint } from "../tools/Points";
+import { LevelData } from "../../lib/types";
+import { gameThemes } from "../../lib/gameThemes";
 
 export class PlayGame extends Scene {
-    private levelData: LevelData | TempLevelData;
-    private camera: Phaser.Cameras.Scene2D.Camera;
     private blocks: Block[] = [];
-    private endPoint: EndPoint;
-    private isTestMode: boolean = false;
-
+    private startPoint: StartPoint | null = null;
+    private endPoint: EndPoint | null = null;
     private player: Phaser.Physics.Arcade.Sprite;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private jumpKey: Phaser.Input.Keyboard.Key;
+    private levelData: LevelData;
 
     private readonly PLAYER_SPEED = 160;
     private readonly JUMP_VELOCITY = -330;
@@ -22,46 +20,128 @@ export class PlayGame extends Scene {
         super({ key: "PlayGame" });
     }
 
-    init(data: { levelData: LevelData; isTest?: boolean }) {
-        this.isTestMode = data.isTest || false;
-        const tempLevel = localStorage.getItem("tempLevel");
-        this.levelData = tempLevel
-            ? (JSON.parse(tempLevel) as TempLevelData)
-            : data.levelData;
-
-        this.createLevel();
+    init(data: LevelData) {
+        this.levelData = data;
     }
 
     preload() {
-        this.load.image("background", "assets/backgrounds/forrest.png");
-        this.load.image("block_middle", "assets/block_middle.png");
-        this.load.image("block_left", "assets/block_left.png");
-        this.load.image("block_right", "assets/block_right.png");
-        this.load.spritesheet("end", "assets/portal_blue.png", {
-            frameWidth: 32,
-            frameHeight: 32,
+        const themeConfig = gameThemes[this.levelData.theme];
+
+        themeConfig.blocks.forEach((block) => {
+            this.load.image(block.id, this.getThemeAssetPath(block.asset));
         });
+
+        this.load.image(
+            "start",
+            this.getThemeAssetPath(themeConfig.startPoint),
+        );
+        this.load.image("end", this.getThemeAssetPath(themeConfig.endPoint));
+
         this.load.spritesheet("player", "assets/player.png", {
             frameWidth: 64,
             frameHeight: 64,
         });
+
+        if (themeConfig.background) {
+            this.load.image(
+                "background",
+                this.getThemeAssetPath(themeConfig.background),
+            );
+        }
+    }
+    create() {
+        // this.add.image(0, 0, "background").setOrigin(0, 0).setScale(1.8);
+
+        this.setupLevel(this.levelData);
+
+        this.setupPlayer(this.startPoint!.x, this.startPoint!.y);
+
+        this.setupAnimations();
+
+        this.setupControls();
+
+        if (this.levelData.testMode) {
+            this.setupTestModeUI();
+        }
     }
 
-    create() {
-        this.camera = this.cameras.main;
-        this.add.image(0, 0, "background").setScale(1.8).setOrigin(0, 0);
+    private setupLevel(state: LevelData) {
+        const themeConfig = gameThemes[state.theme];
 
+        this.blocks.forEach((block) => block.destroy());
+        this.blocks = [];
+
+        if (state.blocks) {
+            this.blocks = state.blocks
+                .map((blockData) => {
+                    const blockConfig = themeConfig.blocks.find(
+                        (config) => config.id === blockData.blockId,
+                    );
+
+                    if (!blockConfig) {
+                        console.warn(
+                            `Block config not found for id: ${blockData.blockId}`,
+                        );
+                        return null;
+                    }
+
+                    return new Block(
+                        this,
+                        blockData.x,
+                        blockData.y,
+                        this.levelData.theme,
+                        blockConfig,
+                        blockData.rotation || 0,
+                    );
+                })
+                .filter((block): block is Block => block !== null);
+        }
+
+        if (state.startPoint) {
+            this.startPoint = new StartPoint(
+                this,
+                state.startPoint.x,
+                state.startPoint.y,
+            );
+        }
+
+        if (state.endPoint) {
+            this.endPoint = new EndPoint(
+                this,
+                state.endPoint.x,
+                state.endPoint.y,
+            );
+        }
+    }
+
+    private setupPlayer(x: number, y: number) {
         this.player = this.physics.add
-            .sprite(
-                this.levelData.startPoint.x,
-                this.levelData.startPoint.y,
-                "player",
-            )
+            .sprite(x, y, "player")
             .setCollideWorldBounds(true)
             .setGravityY(500)
             .setOffset(0, -16)
             .setSize(18, 32);
 
+        this.blocks.forEach((block) => {
+            // const collider =
+            this.physics.add.collider(
+                this.player,
+                block,
+                undefined,
+                undefined,
+                this,
+            );
+
+            // if (block.config.physics) {
+            //     collider.setBounce(block.config.physics.bounce || 0);
+            //     if (block.config.physics.friction !== undefined) {
+            //         block.body.setFrictionX(block.config.physics.friction);
+            //     }
+            // }
+        });
+    }
+
+    private setupAnimations() {
         this.anims.create({
             key: "idle",
             frames: this.anims.generateFrameNumbers("player", {
@@ -91,48 +171,37 @@ export class PlayGame extends Scene {
             frameRate: 2,
             repeat: -1,
         });
+    }
 
-        this.anims.create({
-            key: "end_portal",
-            frames: this.anims.generateFrameNumbers("end", {
-                start: 0,
-                end: 5,
-            }),
-            frameRate: 10,
-            repeat: -1,
-        });
-
+    private setupControls() {
         this.cursors = this.input.keyboard!.createCursorKeys();
         this.jumpKey = this.input.keyboard!.addKey(
             Phaser.Input.Keyboard.KeyCodes.SPACE,
         );
+    }
 
-        this.physics.add.collider(this.player, this.blocks);
-
-        this.player.anims.play("idle", true);
-
-        if (this.isTestMode) {
-            this.add
-                .text(16, 16, "Return to Editor", {
-                    backgroundColor: "#444",
-                    padding: { x: 10, y: 5 },
-                    color: "#ffffff",
-                })
-                .setScrollFactor(0)
-                .setDepth(1000)
-                .setInteractive()
-                .on("pointerdown", () => {
-                    this.scene.start("LevelCreator");
-                    EventBus.emit("returnToEditor");
-                });
-        }
-
-        EventBus.emit("current-scene-ready", this);
+    private setupTestModeUI() {
+        this.add
+            .text(16, 16, "Return to Editor", {
+                backgroundColor: "#444",
+                padding: { x: 10, y: 5 },
+                color: "#ffffff",
+            })
+            .setScrollFactor(0)
+            .setDepth(1000)
+            .setInteractive()
+            .on("pointerdown", () => {
+                this.scene.start("LevelCreator", this.levelData);
+            });
     }
 
     update() {
         if (!this.player) return;
 
+        this.handlePlayerMovement();
+    }
+
+    private handlePlayerMovement() {
         const onGround = this.player.body!.blocked.down;
 
         if (this.cursors.left.isDown) {
@@ -158,18 +227,8 @@ export class PlayGame extends Scene {
         }
     }
 
-    private createLevel() {
-        this.levelData.blocks.forEach((block) => {
-            this.blocks.push(new Block(this, block.x, block.y, block.type));
-        });
-
-        if (this.endPoint) {
-            this.endPoint = new EndPoint(
-                this,
-                this.levelData.endPoint.x,
-                this.levelData.endPoint.y,
-            );
-        }
+    private getThemeAssetPath(assetName: string): string {
+        return `assets/theme_${this.levelData.theme}/${assetName}`;
     }
 }
 

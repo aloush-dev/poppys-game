@@ -1,20 +1,20 @@
 import { useState, useCallback, useRef } from "react";
-import block from "/assets/block_middle.png?url";
+import block from "/assets/block1.png?url";
 import blockLeft from "/assets/block_left.png?url";
 import blockRight from "/assets/block_right.png";
 import { EventBus } from "../EventBus";
 
-type BlockType = "block_middle" | "block_left" | "block_right";
+type BlockType = "block1" | "block_left" | "block_right";
 
 const blockIcons = {
-    block_middle: block,
+    block1: block,
     block_left: blockLeft,
     block_right: blockRight,
 };
 
 export default function BlockSelector() {
     const [selectedBlock, setSelectedBlock] =
-        useState<BlockType>("block_middle");
+        useState<BlockType>("block1");
     const [showSelector, setShowSelector] = useState(false);
     const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
