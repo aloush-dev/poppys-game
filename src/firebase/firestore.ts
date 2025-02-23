@@ -12,6 +12,15 @@ export const SaveLevel = async (levelData: LevelData) => {
     }
 };
 
+export const publishLevel = async (levelData?: LevelData, levelId?: string) => {
+    try {
+        await addDoc(collection(db, "publishedLevels"), { levelId });
+    } catch (error) {
+        console.error("Error publishing level", error);
+        throw error;
+    }
+};
+
 export const getLevelsByUserId = async (userId: string) => {
     try {
         const levels = await getDocs(
@@ -57,5 +66,4 @@ export const getAllLevels = async () => {
         throw error;
     }
 };
-
 

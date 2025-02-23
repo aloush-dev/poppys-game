@@ -2,8 +2,9 @@ import { Scene } from "phaser";
 import { Block } from "../tools/Block";
 import { EndPoint, StartPoint } from "../tools/Points";
 import { LevelData } from "../../lib/types";
-import { gameThemes } from "../../lib/gameThemes";
+import { gameBackgrounds, gameThemes } from "../../lib/gameThemes";
 import { Enemy } from "../tools/Enemy";
+import { EventBus } from "../EventBus";
 
 export class PlayGame extends Scene {
     private blocks: Block[] = [];
@@ -14,6 +15,7 @@ export class PlayGame extends Scene {
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private jumpKey: Phaser.Input.Keyboard.Key;
     private levelData: LevelData;
+    private currentBackground: Phaser.GameObjects.Image;
 
     private readonly PLAYER_SPEED = 160;
     private readonly JUMP_VELOCITY = -330;
@@ -48,15 +50,26 @@ export class PlayGame extends Scene {
             frameHeight: 64,
         });
 
-        if (themeConfig.background) {
+        gameBackgrounds.forEach((background) => {
             this.load.image(
-                "background",
-                this.getThemeAssetPath(themeConfig.background),
+                background.id,
+                `assets/theme_${this.levelData.theme}/backgrounds/${background.asset}`,
             );
-        }
+        });
     }
     create() {
-        // this.add.image(0, 0, "background").setOrigin(0, 0).setScale(1.8);
+        const backgroundId =
+            this.levelData.backgroundId || gameBackgrounds[0].id;
+        const backgroundConfig = gameBackgrounds.find(
+            (bg) => bg.id === backgroundId,
+        );
+
+        if (backgroundConfig) {
+            this.currentBackground = this.add
+                .image(0, 0, backgroundId)
+                .setOrigin(0, 0)
+                .setScale(backgroundConfig.scale);
+        }
 
         this.setupLevel(this.levelData);
 
@@ -79,6 +92,16 @@ export class PlayGame extends Scene {
 
         this.enemies.forEach((enemy) => enemy.destroy());
         this.enemies = [];
+
+        if (state.backgroundId) {
+            const backgroundConfig = gameBackgrounds.find(
+                (bg) => bg.id === state.backgroundId,
+            );
+            if (backgroundConfig && this.currentBackground) {
+                this.currentBackground.setTexture(state.backgroundId);
+                this.currentBackground.setScale(backgroundConfig.scale);
+            }
+        }
 
         if (state.blocks) {
             this.blocks = state.blocks
@@ -152,10 +175,10 @@ export class PlayGame extends Scene {
 
     private setupPlayer(x: number, y: number) {
         this.player = this.physics.add
-            .sprite(x, y, "player")
+            .sprite(x + 16, y + 16, "player")
             .setCollideWorldBounds(true)
             .setGravityY(500)
-            .setOffset(0, -16)
+            .setOffset(0, 0)
             .setSize(18, 32);
 
         this.blocks.forEach((block) => {
@@ -230,6 +253,7 @@ export class PlayGame extends Scene {
             .setDepth(1000)
             .setInteractive()
             .on("pointerdown", () => {
+                EventBus.emit("editorMode");
                 this.scene.start("LevelCreator", this.levelData);
             });
     }
@@ -238,6 +262,20 @@ export class PlayGame extends Scene {
         if (!this.player) return;
 
         this.handlePlayerMovement();
+
+        if (this.player.y > this.scale.height) {
+            this.handlePlayerDeath();
+        }
+    }
+
+    private handlePlayerDeath() {
+        this.player.setTint(0xff0000);
+        this.player.setVelocity(0, 0);
+        this.player.body!.enable = false;
+
+        this.time.delayedCall(500, () => {
+            this.restartLevel();
+        });
     }
 
     private handlePlayerMovement() {

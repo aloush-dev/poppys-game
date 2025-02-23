@@ -3,7 +3,7 @@ import { EventBus } from "../EventBus";
 import { Block } from "../tools/Block";
 import { LevelData, LevelThemes, EditorTool } from "../../lib/types";
 import { EndPoint, StartPoint } from "../tools/Points";
-import { gameThemes } from "../../lib/gameThemes";
+import { gameBackgrounds, gameThemes } from "../../lib/gameThemes";
 import { Enemy } from "../tools/Enemy";
 
 export class LevelCreator extends Scene {
@@ -19,6 +19,7 @@ export class LevelCreator extends Scene {
     private gridRows: number;
     private gridGraphics: Phaser.GameObjects.Graphics;
     private currentRotation: number = 0;
+    private currentBackground: Phaser.GameObjects.Image;
 
     constructor() {
         super({ key: "LevelCreator" });
@@ -47,6 +48,13 @@ export class LevelCreator extends Scene {
             );
         });
 
+        gameBackgrounds.forEach((background) => {
+            this.load.image(
+                background.id,
+                `assets/backgrounds/${background.asset}`,
+            );
+        });
+
         this.load.image(
             "start",
             `assets/theme_${this.levelTheme}/${themeConfig.startPoint}`,
@@ -54,11 +62,6 @@ export class LevelCreator extends Scene {
         this.load.image(
             "end",
             `assets/theme_${this.levelTheme}/${themeConfig.endPoint}`,
-        );
-
-        this.load.image(
-            "background",
-            `assets/theme_${this.levelTheme}/background.png`,
         );
     }
 
@@ -71,6 +74,14 @@ export class LevelCreator extends Scene {
         this.gridGraphics = this.add.graphics();
         this.drawGrid();
 
+        const defaultBackground = gameBackgrounds[0];
+        this.currentBackground = this.add
+            .image(0, 0, defaultBackground.id)
+            .setOrigin(0, 0)
+            .setScale(defaultBackground.scale);
+
+        EventBus.on("backgroundChanged", this.handleBackgroundChange, this);
+
         if (this.levelData) {
             this.setupLevel(this.levelData);
         }
@@ -79,6 +90,9 @@ export class LevelCreator extends Scene {
         EventBus.on("toolSelected", this.onToolSelected, this);
         this.input.on("pointerdown", this.handlePointerDown, this);
         EventBus.on("testLevel", () => this.testLevel(), this);
+        // EventBus.on("publishLevel", (levelName: string, userId: string) =>
+        //     this.saveLevel(levelName, userId),
+        // );
         EventBus.on("rotate", this.handleRotate, this);
     }
 
@@ -87,7 +101,19 @@ export class LevelCreator extends Scene {
         EventBus.off("toolSelected", this.onToolSelected);
         EventBus.off("testLevel");
         EventBus.off("rotate", this.handleRotate);
+        EventBus.off("backgroundChanged", this.handleBackgroundChange);
     }
+
+    private handleBackgroundChange = (backgroundId: string) => {
+        const backgroundConfig = gameBackgrounds.find(
+            (bg) => bg.id === backgroundId,
+        );
+
+        if (backgroundConfig && this.currentBackground) {
+            this.currentBackground.setTexture(backgroundId);
+            this.currentBackground.setScale(backgroundConfig.scale);
+        }
+    };
 
     private handleThemeChange = (newTheme: LevelThemes) => {
         const currentState = {
@@ -131,6 +157,16 @@ export class LevelCreator extends Scene {
 
         if (state.theme) {
             this.levelTheme = state.theme;
+        }
+
+        if (state.backgroundId) {
+            const backgroundConfig = gameBackgrounds.find(
+                (bg) => bg.id === state.backgroundId,
+            );
+            if (backgroundConfig && this.currentBackground) {
+                this.currentBackground.setTexture(state.backgroundId);
+                this.currentBackground.setScale(backgroundConfig.scale);
+            }
         }
 
         if (state.blocks) {
@@ -202,6 +238,10 @@ export class LevelCreator extends Scene {
     }
 
     private onToolSelected(tool: EditorTool) {
+        if (tool.startsWith("background_")) {
+            EventBus.emit("backgroundChanged", tool);
+            return;
+        }
         this.selectedTool = tool;
     }
 
@@ -321,7 +361,7 @@ export class LevelCreator extends Scene {
         );
     }
 
-    // private async publishLevel(levelName: string, userId: string) {
+    // private async saveLevel(levelName: string, userId: string) {
     //     if (!this.startPoint || !this.endPoint) {
     //         EventBus.emit("error", "Level must have start and end points");
     //         return;
@@ -357,9 +397,13 @@ export class LevelCreator extends Scene {
 
     private testLevel() {
         if (!this.startPoint) {
-            // EventBus.emit("error", "Level must have a start point");
+            EventBus.emit("error", "Level must have a start point");
             return;
         }
+
+        const currentBackgroundId = gameBackgrounds.find(
+            (bg) => bg.id === this.currentBackground.texture.key,
+        )?.id;
 
         const gameState = {
             testMode: true,
@@ -368,6 +412,7 @@ export class LevelCreator extends Scene {
                 y: block.y,
                 blockId: block.blockId,
                 rotation: block.rotation,
+                baseId: block.baseId,
             })),
             enemies: this.enemies.map((enemy) => ({
                 x: enemy.x,
@@ -388,9 +433,11 @@ export class LevelCreator extends Scene {
                   }
                 : undefined,
             theme: this.levelTheme,
+            backgroundId: currentBackgroundId,
         };
         if (this.startPoint) {
             this.scene.start("PlayGame", gameState);
+            EventBus.emit("testModeReady");
         }
     }
 

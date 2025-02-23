@@ -1,4 +1,4 @@
-import { ThemeConfig } from "./types";
+import { BackgroundData, ThemeConfig } from "./types";
 
 export const gameThemes: Record<string, ThemeConfig> = {
     standard: {
@@ -35,7 +35,6 @@ export const gameThemes: Record<string, ThemeConfig> = {
                 baseId: "enemy_static",
             },
         ],
-        background: "background.png",
         startPoint: "start_point.png",
         endPoint: "end_point.png",
     },
@@ -50,9 +49,29 @@ export const gameThemes: Record<string, ThemeConfig> = {
                 baseId: "block_with_top",
             },
         ],
-        background: "background.png",
+        enemies: [
+            {
+                id: "enemy_1",
+                asset: "enemy_spikes.png",
+                displayName: "Enemy Spikes",
+                baseId: "enemy_static",
+            },
+        ],
         startPoint: "start_point.png",
         endPoint: "end_point.png",
     },
 };
+
+export const gameBackgrounds: BackgroundData[] = [
+    {
+        id: "background_1",
+        asset: "1.png",
+        scale: 0.6,
+    },
+    {
+        id: "background_2",
+        asset: "2.png",
+        scale: 1,
+    },
+];
 

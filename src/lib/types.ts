@@ -1,6 +1,7 @@
 export interface LevelData {
     id?: string;
     name: string;
+    backgroundId?: string;
     blocks: BlockData[];
     enemies?: EnemyData[];
     startPoint: PointData;
@@ -23,9 +24,14 @@ export interface ThemeConfig {
     blockSize: number;
     blocks: BlockConfig[];
     enemies?: EnemyConfig[];
-    background: string;
     startPoint: string;
     endPoint: string;
+}
+
+export interface BackgroundData {
+    id: string;
+    asset: string;
+    scale: number;
 }
 export interface BlockConfig {
     id: string;

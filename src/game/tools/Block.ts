@@ -71,19 +71,12 @@ export class Block extends Phaser.GameObjects.Image {
                 ) {
                     const snappedX = Math.floor(dragX / 32) * 32;
                     const snappedY = Math.floor(dragY / 32) * 32;
-                    this.setPosition(snappedX + 16, snappedY + 16);
+                    this.setPosition(snappedX, snappedY);
                     this.body.position.set(snappedX, snappedY);
                     this.body.updateFromGameObject();
                 }
             },
         );
-    }
-
-    public getGridPosition() {
-        return {
-            x: this.x - 16,
-            y: this.y - 16,
-        };
     }
 }
 
