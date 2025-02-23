@@ -4,9 +4,9 @@ export class StartPoint extends Phaser.GameObjects.Sprite {
     public body: Phaser.Physics.Arcade.StaticBody;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x + 16, y + 16, "start");
+        super(scene, x, y, "start");
 
-        this.setOrigin(0.5, 0.5);
+        this.setOrigin(0, 0);
         this.setDisplaySize(32, 32);
         this.body = this.body as Phaser.Physics.Arcade.StaticBody;
 

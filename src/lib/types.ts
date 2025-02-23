@@ -2,7 +2,7 @@ export interface LevelData {
     id?: string;
     name: string;
     blocks: BlockData[];
-    enemies?: EnemyType[];
+    enemies?: EnemyData[];
     startPoint: PointData;
     endPoint: PointData;
     creator: string;
@@ -22,6 +22,7 @@ export interface ThemeConfig {
     name: string;
     blockSize: number;
     blocks: BlockConfig[];
+    enemies?: EnemyConfig[];
     background: string;
     startPoint: string;
     endPoint: string;
@@ -30,6 +31,7 @@ export interface BlockConfig {
     id: string;
     asset: string;
     displayName: string;
+    baseId: string;
     physics?: {
         bounce?: number;
         friction?: number;
@@ -37,9 +39,23 @@ export interface BlockConfig {
     };
 }
 
-export interface EnemyType {
+export interface EnemyConfig {
     id: string;
     asset: string;
+    displayName: string;
+    baseId: string;
+    physics?: {
+        bounce?: number;
+        friction?: number;
+        isStatic?: boolean;
+    };
+}
+
+export interface EnemyData {
+    x: number;
+    y: number;
+    enemyId: string;
+    baseId: string;
 }
 
 export interface BlockData {
@@ -47,6 +63,7 @@ export interface BlockData {
     y: number;
     blockId: string;
     rotation: number;
+    baseId: string;
 }
 
 export type EditorTool =

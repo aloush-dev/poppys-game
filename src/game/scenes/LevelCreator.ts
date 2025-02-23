@@ -4,13 +4,14 @@ import { Block } from "../tools/Block";
 import { LevelData, LevelThemes, EditorTool } from "../../lib/types";
 import { EndPoint, StartPoint } from "../tools/Points";
 import { gameThemes } from "../../lib/gameThemes";
-// import { SaveLevel } from "../../firebase/firestore";
+import { Enemy } from "../tools/Enemy";
 
 export class LevelCreator extends Scene {
     private levelTheme: LevelThemes = "standard";
     private levelData: LevelData;
     public selectedTool: EditorTool | null = null;
     private blocks: Block[] = [];
+    private enemies: Enemy[] = [];
     private startPoint: StartPoint | null = null;
     private endPoint: EndPoint | null = null;
     private gridSize: number = 32;
@@ -36,6 +37,13 @@ export class LevelCreator extends Scene {
             this.load.image(
                 block.id,
                 `assets/theme_${this.levelTheme}/${block.asset}`,
+            );
+        });
+
+        themeConfig.enemies?.forEach((enemy) => {
+            this.load.image(
+                enemy.id,
+                `assets/theme_${this.levelTheme}/${enemy.asset}`,
             );
         });
 
@@ -72,8 +80,6 @@ export class LevelCreator extends Scene {
         this.input.on("pointerdown", this.handlePointerDown, this);
         EventBus.on("testLevel", () => this.testLevel(), this);
         EventBus.on("rotate", this.handleRotate, this);
-
-        // EventBus.emit("current-scene-ready", this);
     }
 
     shutdown() {
@@ -89,7 +95,14 @@ export class LevelCreator extends Scene {
                 x: block.x,
                 y: block.y,
                 blockId: block.blockId,
+                baseId: block.baseId,
                 rotation: block.rotation,
+            })),
+            enemies: this.enemies.map((enemy) => ({
+                x: enemy.x,
+                y: enemy.y,
+                enemyId: enemy.enemyId,
+                baseId: enemy.baseId,
             })),
             startPoint: this.startPoint
                 ? {
@@ -124,12 +137,12 @@ export class LevelCreator extends Scene {
             this.blocks = state.blocks
                 .map((blockData) => {
                     const blockConfig = themeConfig.blocks.find(
-                        (config) => config.id === blockData.blockId,
+                        (config) => config.baseId === blockData.baseId,
                     );
 
                     if (!blockConfig) {
                         console.warn(
-                            `Block config not found for id: ${blockData.blockId}`,
+                            `Block config not found for baseId: ${blockData.baseId}`,
                         );
                         return null;
                     }
@@ -144,6 +157,31 @@ export class LevelCreator extends Scene {
                     );
                 })
                 .filter((block): block is Block => block !== null);
+        }
+
+        if (state.enemies) {
+            this.enemies = state.enemies
+                .map((enemyData) => {
+                    const enemyConfig = themeConfig.enemies?.find(
+                        (config) => config.baseId === enemyData.baseId,
+                    );
+
+                    if (!enemyConfig) {
+                        console.warn(
+                            `Enemy config not found for baseId: ${enemyData.baseId}`,
+                        );
+                        return null;
+                    }
+
+                    return new Enemy(
+                        this,
+                        enemyData.x,
+                        enemyData.y,
+                        this.levelTheme,
+                        enemyConfig,
+                    );
+                })
+                .filter((enemy): enemy is Enemy => enemy !== null);
         }
 
         if (state.startPoint) {
@@ -187,6 +225,9 @@ export class LevelCreator extends Scene {
         const blockConfig = themeConfig.blocks.find(
             (block) => block.id === this.selectedTool,
         );
+        const enemyConfig = themeConfig.enemies?.find(
+            (enemy) => enemy.id === this.selectedTool,
+        );
 
         if (blockConfig) {
             const block = new Block(
@@ -200,6 +241,13 @@ export class LevelCreator extends Scene {
             this.blocks.push(block);
             return;
         }
+
+        if (enemyConfig) {
+            const enemy = new Enemy(this, x, y, this.levelTheme, enemyConfig);
+            this.enemies.push(enemy);
+            return;
+        }
+
         switch (this.selectedTool) {
             case "start":
                 if (this.startPoint) this.startPoint.destroy();
@@ -213,6 +261,15 @@ export class LevelCreator extends Scene {
                 const block = this.blocks.find(
                     (block) => block.x === x && block.y === y,
                 );
+
+                const enemy = this.enemies.find(
+                    (enemy) => enemy.x === x && enemy.y === y,
+                );
+
+                if (enemy) {
+                    enemy.destroy();
+                    this.enemies = this.enemies.filter((e) => e !== enemy);
+                }
                 if (block) {
                     block.destroy();
                     this.blocks = this.blocks.filter((b) => b !== block);
@@ -311,6 +368,12 @@ export class LevelCreator extends Scene {
                 y: block.y,
                 blockId: block.blockId,
                 rotation: block.rotation,
+            })),
+            enemies: this.enemies.map((enemy) => ({
+                x: enemy.x,
+                y: enemy.y,
+                enemyId: enemy.enemyId,
+                baseId: enemy.baseId,
             })),
             startPoint: this.startPoint
                 ? {

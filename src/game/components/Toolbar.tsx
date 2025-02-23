@@ -1,4 +1,4 @@
-import { Pointer, RotateCw, Trash } from "lucide-react";
+import { Pointer, Trash } from "lucide-react";
 import { EventBus } from "../EventBus";
 import { useEffect, useState } from "react";
 import { LevelThemes } from "../../lib/types";
@@ -68,6 +68,33 @@ export const Toolbar = () => {
                 </div>
             </div>
 
+            {themeConfig.enemies && (
+                <div>
+                    <p className="text-white font-bold">Enemies</p>
+                    <div className="flex gap-2 flex-wrap">
+                        {themeConfig.enemies.map((enemy) => (
+                            <button
+                                key={enemy.id}
+                                className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs"
+                                onClick={() =>
+                                    EventBus.emit("toolSelected", enemy.id)
+                                }
+                                title={enemy.displayName}
+                            >
+                                <img
+                                    src={`/assets/theme_${currentTheme}/${enemy.asset}`}
+                                    alt={enemy.displayName}
+                                    className="w-8 h-8"
+                                    style={{
+                                        transform: `rotate(${currentRotation}deg)`,
+                                    }}
+                                />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div>
                 <p className="text-white font-bold">Points</p>
                 <div className="flex gap-2">
@@ -97,12 +124,12 @@ export const Toolbar = () => {
                 <Trash />
             </button>
 
-            <button
+            {/* <button
                 className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                 onClick={() => EventBus.emit("rotate")}
             >
                 <RotateCw />
-            </button>
+            </button> */}
 
             <button
                 className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
