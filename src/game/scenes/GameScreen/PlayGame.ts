@@ -1,24 +1,25 @@
 import { Scene } from "phaser";
-import { Block } from "../tools/Block";
-import { EndPoint, StartPoint } from "../tools/Points";
-import { LevelData } from "../../lib/types";
-import { gameBackgrounds, gameThemes } from "../../lib/gameThemes";
-import { Enemy } from "../tools/Enemy";
-import { EventBus } from "../EventBus";
+import { Block } from "@/game/tools/Block";
+import { EndPoint, StartPoint } from "@/game/tools/Points";
+import { LevelData, LevelThemes } from "@/lib/types";
+import { gameBackgrounds, gameThemes } from "@/lib/gameThemes";
+import { Enemy } from "@/game/tools/Enemy";
+import { EventBus } from "@/game/EventBus";
 
 export class PlayGame extends Scene {
-    private blocks: Block[] = [];
-    private enemies: Enemy[] = [];
-    private startPoint: StartPoint | null = null;
-    private endPoint: EndPoint | null = null;
-    private player: Phaser.Physics.Arcade.Sprite;
-    private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-    private jumpKey: Phaser.Input.Keyboard.Key;
-    private levelData: LevelData;
-    private currentBackground: Phaser.GameObjects.Image;
+    public blocks: Block[] = [];
+    public enemies: Enemy[] = [];
+    public startPoint: StartPoint | null = null;
+    public endPoint: EndPoint | null = null;
+    public player: Phaser.Physics.Arcade.Sprite;
+    public cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+    public jumpKey: Phaser.Input.Keyboard.Key;
+    public levelData: LevelData;
+    public currentBackground: Phaser.GameObjects.Image;
+    public levelTheme: LevelThemes;
 
-    private readonly PLAYER_SPEED = 160;
-    private readonly JUMP_VELOCITY = -330;
+    public readonly PLAYER_SPEED = 160;
+    public readonly JUMP_VELOCITY = -330;
 
     constructor() {
         super({ key: "PlayGame" });
@@ -78,10 +79,6 @@ export class PlayGame extends Scene {
         this.setupAnimations();
 
         this.setupControls();
-
-        if (this.levelData.testMode) {
-            this.setupTestModeUI();
-        }
     }
 
     update() {
@@ -133,7 +130,6 @@ export class PlayGame extends Scene {
                         blockData.y,
                         this.levelData.theme,
                         blockConfig,
-                        blockData.rotation,
                     );
                     return block;
                 })
@@ -262,22 +258,6 @@ export class PlayGame extends Scene {
         );
     }
 
-    private setupTestModeUI() {
-        this.add
-            .text(16, 16, "Return to Editor", {
-                backgroundColor: "#444",
-                padding: { x: 10, y: 5 },
-                color: "#ffffff",
-            })
-            .setScrollFactor(0)
-            .setDepth(1000)
-            .setInteractive()
-            .on("pointerdown", () => {
-                EventBus.emit("editorMode");
-                this.scene.start("LevelCreator", this.levelData);
-            });
-    }
-
     private handlePlayerDeath() {
         this.player.setTint(0xff0000);
         this.player.setVelocity(0, 0);
@@ -340,16 +320,11 @@ export class PlayGame extends Scene {
         this.player.setTint(0x00ff00);
 
         this.time.delayedCall(500, () => {
-            if (this.levelData.testMode) {
-                EventBus.emit("editorMode");
-                this.scene.start("LevelCreator", this.levelData);
-            } else {
-                EventBus.emit("levelComplete", this.levelData);
-                this.scene.start("GameOver", {
-                    success: true,
-                    levelData: this.levelData,
-                });
-            }
+            EventBus.emit("levelComplete", this.levelData);
+            this.scene.start("GameOver", {
+                success: true,
+                levelData: this.levelData,
+            });
         });
     };
 }

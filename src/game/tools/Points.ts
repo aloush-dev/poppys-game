@@ -1,4 +1,4 @@
-import { LevelCreator } from "../scenes/LevelCreator";
+import { LevelEditor } from "../scenes/LevelEditor";
 
 export class StartPoint extends Phaser.GameObjects.Sprite {
     public body: Phaser.Physics.Arcade.StaticBody;
@@ -23,7 +23,7 @@ export class StartPoint extends Phaser.GameObjects.Sprite {
             ) => {
                 if (
                     gameObject === this &&
-                    (scene as LevelCreator).selectedTool === "select"
+                    (scene as LevelEditor).selectedTool === "select"
                 ) {
                     const snappedX = Math.floor(dragX / 32) * 32;
                     const snappedY = Math.floor(dragY / 32) * 32;
@@ -59,7 +59,7 @@ export class EndPoint extends Phaser.GameObjects.Sprite {
             ) => {
                 if (
                     gameObject === this &&
-                    (scene as LevelCreator).selectedTool === "select"
+                    (scene as LevelEditor).selectedTool === "select"
                 ) {
                     const snappedX = Math.floor(dragX / 32) * 32;
                     const snappedY = Math.floor(dragY / 32) * 32;

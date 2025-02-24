@@ -6,6 +6,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../../firebase/config";
 import { createDBUser } from "../../firebase/firestore";
+import { useNavigate } from "@tanstack/react-router";
 
 interface LoginSignupFormProps {
     onClose?: () => void;
@@ -19,6 +20,8 @@ const LoginSignupForm: React.FC<LoginSignupFormProps> = ({ onClose }) => {
     const [isLogin, setIsLogin] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const navigate = useNavigate();
+
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
@@ -31,6 +34,8 @@ const LoginSignupForm: React.FC<LoginSignupFormProps> = ({ onClose }) => {
         try {
             if (isLogin) {
                 await signInWithEmailAndPassword(auth, email, password);
+
+                navigate({ to: "/" });
             } else {
                 await createUserWithEmailAndPassword(
                     auth,

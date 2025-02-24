@@ -12,16 +12,26 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as PlayImport } from './routes/play'
+import { Route as LoginImport } from './routes/login'
 import { Route as ExploreImport } from './routes/explore'
 import { Route as CreateImport } from './routes/create'
 import { Route as IndexImport } from './routes/index'
+import { Route as ProfileIndexImport } from './routes/profile/index'
 import { Route as UserUsernameImport } from './routes/user/$username'
+import { Route as ProfileSavedLevelsImport } from './routes/profile/saved-levels'
+import { Route as ProfilePublishedLevelsImport } from './routes/profile/published-levels'
 
 // Create/Update Routes
 
 const PlayRoute = PlayImport.update({
   id: '/play',
   path: '/play',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const LoginRoute = LoginImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -43,9 +53,27 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const ProfileIndexRoute = ProfileIndexImport.update({
+  id: '/profile/',
+  path: '/profile/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const UserUsernameRoute = UserUsernameImport.update({
   id: '/user/$username',
   path: '/user/$username',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ProfileSavedLevelsRoute = ProfileSavedLevelsImport.update({
+  id: '/profile/saved-levels',
+  path: '/profile/saved-levels',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ProfilePublishedLevelsRoute = ProfilePublishedLevelsImport.update({
+  id: '/profile/published-levels',
+  path: '/profile/published-levels',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -74,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExploreImport
       parentRoute: typeof rootRoute
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginImport
+      parentRoute: typeof rootRoute
+    }
     '/play': {
       id: '/play'
       path: '/play'
@@ -81,11 +116,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayImport
       parentRoute: typeof rootRoute
     }
+    '/profile/published-levels': {
+      id: '/profile/published-levels'
+      path: '/profile/published-levels'
+      fullPath: '/profile/published-levels'
+      preLoaderRoute: typeof ProfilePublishedLevelsImport
+      parentRoute: typeof rootRoute
+    }
+    '/profile/saved-levels': {
+      id: '/profile/saved-levels'
+      path: '/profile/saved-levels'
+      fullPath: '/profile/saved-levels'
+      preLoaderRoute: typeof ProfileSavedLevelsImport
+      parentRoute: typeof rootRoute
+    }
     '/user/$username': {
       id: '/user/$username'
       path: '/user/$username'
       fullPath: '/user/$username'
       preLoaderRoute: typeof UserUsernameImport
+      parentRoute: typeof rootRoute
+    }
+    '/profile/': {
+      id: '/profile/'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileIndexImport
       parentRoute: typeof rootRoute
     }
   }
@@ -97,16 +153,24 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
+  '/login': typeof LoginRoute
   '/play': typeof PlayRoute
+  '/profile/published-levels': typeof ProfilePublishedLevelsRoute
+  '/profile/saved-levels': typeof ProfileSavedLevelsRoute
   '/user/$username': typeof UserUsernameRoute
+  '/profile': typeof ProfileIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
+  '/login': typeof LoginRoute
   '/play': typeof PlayRoute
+  '/profile/published-levels': typeof ProfilePublishedLevelsRoute
+  '/profile/saved-levels': typeof ProfileSavedLevelsRoute
   '/user/$username': typeof UserUsernameRoute
+  '/profile': typeof ProfileIndexRoute
 }
 
 export interface FileRoutesById {
@@ -114,16 +178,48 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
+  '/login': typeof LoginRoute
   '/play': typeof PlayRoute
+  '/profile/published-levels': typeof ProfilePublishedLevelsRoute
+  '/profile/saved-levels': typeof ProfileSavedLevelsRoute
   '/user/$username': typeof UserUsernameRoute
+  '/profile/': typeof ProfileIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/create' | '/explore' | '/play' | '/user/$username'
+  fullPaths:
+    | '/'
+    | '/create'
+    | '/explore'
+    | '/login'
+    | '/play'
+    | '/profile/published-levels'
+    | '/profile/saved-levels'
+    | '/user/$username'
+    | '/profile'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create' | '/explore' | '/play' | '/user/$username'
-  id: '__root__' | '/' | '/create' | '/explore' | '/play' | '/user/$username'
+  to:
+    | '/'
+    | '/create'
+    | '/explore'
+    | '/login'
+    | '/play'
+    | '/profile/published-levels'
+    | '/profile/saved-levels'
+    | '/user/$username'
+    | '/profile'
+  id:
+    | '__root__'
+    | '/'
+    | '/create'
+    | '/explore'
+    | '/login'
+    | '/play'
+    | '/profile/published-levels'
+    | '/profile/saved-levels'
+    | '/user/$username'
+    | '/profile/'
   fileRoutesById: FileRoutesById
 }
 
@@ -131,16 +227,24 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreateRoute: typeof CreateRoute
   ExploreRoute: typeof ExploreRoute
+  LoginRoute: typeof LoginRoute
   PlayRoute: typeof PlayRoute
+  ProfilePublishedLevelsRoute: typeof ProfilePublishedLevelsRoute
+  ProfileSavedLevelsRoute: typeof ProfileSavedLevelsRoute
   UserUsernameRoute: typeof UserUsernameRoute
+  ProfileIndexRoute: typeof ProfileIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreateRoute: CreateRoute,
   ExploreRoute: ExploreRoute,
+  LoginRoute: LoginRoute,
   PlayRoute: PlayRoute,
+  ProfilePublishedLevelsRoute: ProfilePublishedLevelsRoute,
+  ProfileSavedLevelsRoute: ProfileSavedLevelsRoute,
   UserUsernameRoute: UserUsernameRoute,
+  ProfileIndexRoute: ProfileIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -156,8 +260,12 @@ export const routeTree = rootRoute
         "/",
         "/create",
         "/explore",
+        "/login",
         "/play",
-        "/user/$username"
+        "/profile/published-levels",
+        "/profile/saved-levels",
+        "/user/$username",
+        "/profile/"
       ]
     },
     "/": {
@@ -169,11 +277,23 @@ export const routeTree = rootRoute
     "/explore": {
       "filePath": "explore.tsx"
     },
+    "/login": {
+      "filePath": "login.tsx"
+    },
     "/play": {
       "filePath": "play.tsx"
     },
+    "/profile/published-levels": {
+      "filePath": "profile/published-levels.tsx"
+    },
+    "/profile/saved-levels": {
+      "filePath": "profile/saved-levels.tsx"
+    },
     "/user/$username": {
       "filePath": "user/$username.tsx"
+    },
+    "/profile/": {
+      "filePath": "profile/index.tsx"
     }
   }
 }

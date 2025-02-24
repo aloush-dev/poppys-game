@@ -1,6 +1,6 @@
 import { gameThemes } from "../../lib/gameThemes";
 import { BlockConfig } from "../../lib/types";
-import { LevelCreator } from "../scenes/LevelCreator";
+import { LevelEditor } from "../scenes/LevelEditor";
 
 export class Block extends Phaser.GameObjects.Image {
     public blockId: string;
@@ -49,7 +49,7 @@ export class Block extends Phaser.GameObjects.Image {
         this.body.position.set(x, y);
         this.body.updateFromGameObject();
 
-        if (scene.scene.key === "LevelCreator") {
+        if (scene.scene.key === "LevelEditor") {
             this.setInteractive();
             scene.input.setDraggable(this);
             this.setupDragEvents(scene);
@@ -67,7 +67,7 @@ export class Block extends Phaser.GameObjects.Image {
             ) => {
                 if (
                     gameObject === this &&
-                    (scene as LevelCreator).selectedTool === "select"
+                    (scene as LevelEditor).selectedTool === "select"
                 ) {
                     const snappedX = Math.floor(dragX / 32) * 32;
                     const snappedY = Math.floor(dragY / 32) * 32;

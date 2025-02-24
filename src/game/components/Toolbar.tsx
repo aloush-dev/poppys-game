@@ -190,7 +190,12 @@ export const Toolbar = () => {
                 </button>
             </div>
 
-            <button className="w-full h-12 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs">
+            <button
+                className="w-full h-12 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs"
+                onClick={() => {
+                    EventBus.emit("publishLevel");
+                }}
+            >
                 Publish
             </button>
         </div>

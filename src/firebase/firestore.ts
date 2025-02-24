@@ -2,68 +2,97 @@ import {
     addDoc,
     collection,
     doc,
+    getDoc,
     getDocs,
     query,
     serverTimestamp,
     updateDoc,
     where,
 } from "firebase/firestore";
-import { LevelData, StoredLevelData } from "../lib/types";
+import { LevelDataToPost, SavedLevel } from "../lib/types";
 import { db } from "./config";
 import { DBUser } from "../lib/dbTypes";
 
-export const SaveLevel = async (levelData: LevelData, levelId?: string) => {
+export const SaveLevel = async (
+    levelData: LevelDataToPost,
+    levelId?: string,
+) => {
     try {
         if (levelId) {
-            const levelQuery = query(
-                collection(db, "levels"),
-                where("id", "==", levelId),
-            );
-            const levelDocs = await getDocs(levelQuery);
-            if (!levelDocs.empty) {
-                const docRef = doc(db, "levels", levelDocs.docs[0].id);
+            const docRef = doc(db, "levels", levelId);
+            const levelDoc = await getDoc(docRef);
+
+            if (levelDoc.exists()) {
+                const levelData = levelDoc.data();
+                if (levelData.published) {
+                    throw new Error("Cannot edit a published level");
+                }
+
                 await updateDoc(docRef, {
-                    ...levelData,
-                    published: false,
+                    levelData: levelData.levelData,
+                    name: levelData.name,
                     updatedAt: serverTimestamp(),
                 });
-                return levelDocs.docs[0].id;
+                return levelId;
             }
-        } else {
-            const docRef = await addDoc(collection(db, "levels"), {
-                ...levelData,
-                published: false,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
-            return docRef.id;
         }
+
+        const docRef = await addDoc(collection(db, "levels"), {
+            name: levelData.name,
+            creator: levelData.creator,
+            levelData: levelData.levelData,
+            published: false,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        });
+
+        return docRef.id;
     } catch (error) {
-        console.error("Error Saving level", error);
+        console.error("Error saving level", error);
         throw error;
     }
 };
 
-export const publishLevel = async (levelData: LevelData, levelId?: string) => {
+export const publishLevel = async (
+    levelData: LevelDataToPost,
+    levelId?: string,
+) => {
     try {
         if (levelId) {
-            const levelQuery = query(
-                collection(db, "levels"),
-                where("id", "==", levelId),
+            const levelDoc = await getDocs(
+                query(collection(db, "levels"), where("id", "==", levelId)),
             );
-            const levelDocs = await getDocs(levelQuery);
-            if (!levelDocs.empty) {
-                const docRef = doc(db, "levels", levelDocs.docs[0].id);
-                await updateDoc(docRef, {
-                    ...levelData,
+
+            if (!levelDoc.empty) {
+                const existingLevel = levelDoc.docs[0];
+                if (existingLevel.data().published) {
+                    throw new Error("Level is already published");
+                }
+
+                await updateDoc(doc(db, "levels", existingLevel.id), {
+                    levelData: levelData.levelData,
+                    name: levelData.name,
                     published: true,
+                    createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
                 });
-                return;
+                return existingLevel.id;
             }
-        } else {
-            await addDoc(collection(db, "levels"), levelData);
         }
+
+        const docRef = await addDoc(collection(db, "levels"), {
+            name: levelData.name,
+            creator: levelData.creator,
+            levelData: levelData.levelData,
+            published: true,
+            plays: 0,
+            likes: 0,
+            completes: 0,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        });
+
+        return docRef.id;
     } catch (error) {
         console.error("Error publishing level", error);
         throw error;
@@ -75,7 +104,7 @@ export const getPublishedLevelsByUserId = async (userId: string) => {
         const levels = await getDocs(
             query(
                 collection(db, "levels"),
-                where("userId", "==", userId),
+                where("creator", "==", userId),
                 where("published", "==", true),
             ),
         );
@@ -83,7 +112,27 @@ export const getPublishedLevelsByUserId = async (userId: string) => {
         return levels.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
-        })) as StoredLevelData[];
+        })) as SavedLevel[];
+    } catch (error) {
+        console.error("Error getting levels by user id", error);
+        throw error;
+    }
+};
+
+export const getSavedLevelsByUserId = async (userId: string) => {
+    try {
+        const levels = await getDocs(
+            query(
+                collection(db, "levels"),
+                where("creator", "==", userId),
+                where("published", "==", false),
+            ),
+        );
+
+        return levels.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        })) as SavedLevel[];
     } catch (error) {
         console.error("Error getting levels by user id", error);
         throw error;
@@ -92,14 +141,14 @@ export const getPublishedLevelsByUserId = async (userId: string) => {
 
 export const getLevelById = async (levelId: string) => {
     try {
-        const level = await getDocs(
-            query(collection(db, "levels"), where("id", "==", levelId)),
-        );
-
-        return level.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-        }))[0] as StoredLevelData;
+        const levelDoc = await getDoc(doc(db, "levels", levelId));
+        if (!levelDoc.exists()) {
+            return null;
+        }
+        return {
+            id: levelDoc.id,
+            ...levelDoc.data(),
+        } as SavedLevel;
     } catch (error) {
         console.error("Error getting level by id", error);
         throw error;
@@ -113,7 +162,7 @@ export const getAllLevels = async () => {
         return levels.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
-        })) as LevelData[];
+        })) as SavedLevel[];
     } catch (error) {
         console.error("Error getting all levels", error);
         throw error;

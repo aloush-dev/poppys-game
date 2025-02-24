@@ -1,33 +1,54 @@
 import { Scene } from "phaser";
-import { EventBus } from "../EventBus";
-import { Block } from "../tools/Block";
-import { LevelData, LevelThemes, EditorTool } from "../../lib/types";
-import { EndPoint, StartPoint } from "../tools/Points";
-import { gameBackgrounds, gameThemes } from "../../lib/gameThemes";
-import { Enemy } from "../tools/Enemy";
+import { EventBus } from "@/game/EventBus";
+import { Block } from "@/game/tools/Block";
+import { LevelData, LevelThemes, EditorTool } from "@/lib/types";
+import { EndPoint, StartPoint } from "@/game/tools/Points";
+import { gameBackgrounds, gameThemes } from "@/lib/gameThemes";
+import { Enemy } from "@/game/tools/Enemy";
+import { publishLevel, SaveLevel } from "@/firebase/firestore";
+import { setupLevel } from "../setupLevel";
 
-export class LevelCreator extends Scene {
-    private levelTheme: LevelThemes = "standard";
-    private levelData: LevelData;
+export class LevelEditor extends Scene {
+    public levelTheme: LevelThemes = "standard";
+    public levelData: LevelData;
     public selectedTool: EditorTool | null = null;
-    private blocks: Block[] = [];
-    private enemies: Enemy[] = [];
-    private startPoint: StartPoint | null = null;
-    private endPoint: EndPoint | null = null;
-    private gridSize: number = 32;
-    private gridColumns: number;
-    private gridRows: number;
-    private gridGraphics: Phaser.GameObjects.Graphics;
-    private currentRotation: number = 0;
-    private currentBackground: Phaser.GameObjects.Image;
+    public blocks: Block[] = [];
+    public enemies: Enemy[] = [];
+    public startPoint: StartPoint | null = null;
+    public endPoint: EndPoint | null = null;
+    public gridSize: number = 32;
+    public gridColumns: number;
+    public gridRows: number;
+    public gridGraphics: Phaser.GameObjects.Graphics;
+    public currentBackground: Phaser.GameObjects.Image;
+    public levelId?: string;
+
+    private saveLevelListener: (
+        levelName: string,
+        userId: string,
+        levelId?: string,
+    ) => void;
 
     constructor() {
-        super({ key: "LevelCreator" });
+        super({ key: "LevelEditor" });
     }
 
-    init(data: LevelData) {
+    init(data: { levelData: LevelData; id?: string } | LevelData) {
         if (data) {
-            this.levelData = data;
+            if ("levelData" in data) {
+                this.levelData = data.levelData;
+                this.levelId = data.id;
+            } else {
+                this.levelData = data;
+            }
+        } else {
+            this.levelData = {
+                theme: this.levelTheme,
+                blocks: [],
+                enemies: [],
+                backgroundId: gameBackgrounds[0].id,
+            };
+            this.levelId = undefined;
         }
     }
 
@@ -83,25 +104,34 @@ export class LevelCreator extends Scene {
         EventBus.on("backgroundChanged", this.handleBackgroundChange, this);
 
         if (this.levelData) {
-            this.setupLevel(this.levelData);
+            setupLevel(this, this.levelData);
         }
 
         EventBus.on("themeChanged", this.handleThemeChange, this);
         EventBus.on("toolSelected", this.onToolSelected, this);
         this.input.on("pointerdown", this.handlePointerDown, this);
         EventBus.on("testLevel", () => this.testLevel(), this);
-        // EventBus.on("publishLevel", (levelName: string, userId: string) =>
-        //     this.saveLevel(levelName, userId),
-        // );
-        EventBus.on("rotate", this.handleRotate, this);
+
+        this.saveLevelListener = (
+            levelName: string,
+            userId: string,
+            levelId?: string,
+        ) => this.saveLevel(levelName, userId, levelId);
+
+        EventBus.on("saveLevelData", this.saveLevelListener, this);
+
+        EventBus.on("publishLevelData", (levelName: string, userId: string) =>
+            this.publishLevel(levelName, userId),
+        );
     }
 
     shutdown() {
         EventBus.off("themeChanged", this.handleThemeChange);
         EventBus.off("toolSelected", this.onToolSelected);
         EventBus.off("testLevel");
-        EventBus.off("rotate", this.handleRotate);
         EventBus.off("backgroundChanged", this.handleBackgroundChange);
+        EventBus.off("saveLevelData", this.saveLevelListener);
+        EventBus.off("publishLevelData");
     }
 
     private handleBackgroundChange = (backgroundId: string) => {
@@ -152,91 +182,6 @@ export class LevelCreator extends Scene {
         this.scene.restart(currentState);
     };
 
-    private setupLevel(state: LevelData) {
-        const themeConfig = gameThemes[state.theme || this.levelTheme];
-
-        if (state.theme) {
-            this.levelTheme = state.theme;
-        }
-
-        if (state.backgroundId) {
-            const backgroundConfig = gameBackgrounds.find(
-                (bg) => bg.id === state.backgroundId,
-            );
-            if (backgroundConfig && this.currentBackground) {
-                this.currentBackground.setTexture(state.backgroundId);
-                this.currentBackground.setScale(backgroundConfig.scale);
-            }
-        }
-
-        if (state.blocks) {
-            this.blocks = state.blocks
-                .map((blockData) => {
-                    const blockConfig = themeConfig.blocks.find(
-                        (config) => config.baseId === blockData.baseId,
-                    );
-
-                    if (!blockConfig) {
-                        console.warn(
-                            `Block config not found for baseId: ${blockData.baseId}`,
-                        );
-                        return null;
-                    }
-
-                    return new Block(
-                        this,
-                        blockData.x,
-                        blockData.y,
-                        this.levelTheme,
-                        blockConfig,
-                        blockData.rotation || 0,
-                    );
-                })
-                .filter((block): block is Block => block !== null);
-        }
-
-        if (state.enemies) {
-            this.enemies = state.enemies
-                .map((enemyData) => {
-                    const enemyConfig = themeConfig.enemies?.find(
-                        (config) => config.baseId === enemyData.baseId,
-                    );
-
-                    if (!enemyConfig) {
-                        console.warn(
-                            `Enemy config not found for baseId: ${enemyData.baseId}`,
-                        );
-                        return null;
-                    }
-
-                    return new Enemy(
-                        this,
-                        enemyData.x,
-                        enemyData.y,
-                        this.levelTheme,
-                        enemyConfig,
-                    );
-                })
-                .filter((enemy): enemy is Enemy => enemy !== null);
-        }
-
-        if (state.startPoint) {
-            this.startPoint = new StartPoint(
-                this,
-                state.startPoint.x,
-                state.startPoint.y,
-            );
-        }
-
-        if (state.endPoint) {
-            this.endPoint = new EndPoint(
-                this,
-                state.endPoint.x,
-                state.endPoint.y,
-            );
-        }
-    }
-
     private onToolSelected(tool: EditorTool) {
         if (tool.startsWith("background_")) {
             EventBus.emit("backgroundChanged", tool);
@@ -270,14 +215,7 @@ export class LevelCreator extends Scene {
         );
 
         if (blockConfig) {
-            const block = new Block(
-                this,
-                x,
-                y,
-                this.levelTheme,
-                blockConfig,
-                this.currentRotation,
-            );
+            const block = new Block(this, x, y, this.levelTheme, blockConfig);
             this.blocks.push(block);
             return;
         }
@@ -361,39 +299,105 @@ export class LevelCreator extends Scene {
         );
     }
 
-    // private async saveLevel(levelName: string, userId: string) {
-    //     if (!this.startPoint || !this.endPoint) {
-    //         EventBus.emit("error", "Level must have start and end points");
-    //         return;
-    //     }
+    private async saveLevel(
+        levelName: string,
+        userId: string,
+        levelId?: string,
+    ) {
+        const actualLevelId = levelId || this.levelId;
 
-    //     const levelData: LevelData = {
-    //         name: levelName,
-    //         blocks: this.blocks.map((block) => ({
-    //             x: block.x,
-    //             y: block.y,
-    //             type: block.type,
-    //         })),
-    //         startPoint: {
-    //             x: this.startPoint.x,
-    //             y: this.startPoint.y,
-    //         },
-    //         endPoint: {
-    //             x: this.endPoint.x,
-    //             y: this.endPoint.y,
-    //         },
-    //         creator: userId,
-    //         createdAt: Date.now(),
-    //         theme: this.levelTheme,
-    //     };
+        const LevelData = {
+            id: this.levelId || levelId,
+            name: levelName,
+            creator: userId,
+            levelData: {
+                blocks: this.blocks.map((block) => ({
+                    x: block.x,
+                    y: block.y,
+                    blockId: block.blockId,
+                    baseId: block.baseId,
+                    rotation: block.rotation,
+                })),
+                enemies: this.enemies.map((enemy) => ({
+                    x: enemy.x,
+                    y: enemy.y,
+                    enemyId: enemy.enemyId,
+                    baseId: enemy.baseId,
+                })),
+                startPoint: this.startPoint
+                    ? {
+                          x: this.startPoint.x,
+                          y: this.startPoint.y,
+                      }
+                    : null,
+                endPoint: this.endPoint
+                    ? {
+                          x: this.endPoint.x,
+                          y: this.endPoint.y,
+                      }
+                    : null,
+                theme: this.levelTheme,
+                backgroundId: this.currentBackground?.texture.key,
+            },
+        };
 
-    //     try {
-    //         await SaveLevel(levelData);
-    //         EventBus.emit("levelPublished");
-    //     } catch (error) {
-    //         EventBus.emit("error", "Failed to publish level");
-    //     }
-    // }
+        try {
+            const savedLevelId = await SaveLevel(LevelData, actualLevelId);
+            this.levelId = savedLevelId;
+            EventBus.emit("levelSaved", savedLevelId);
+        } catch (error) {
+            EventBus.emit("error", "Failed to save level");
+        }
+    }
+
+    private async publishLevel(
+        levelName: string,
+        userId: string,
+        levelId?: string,
+    ) {
+        if (!this.startPoint || !this.endPoint) {
+            EventBus.emit("error", "Level must have both start and end points");
+            return;
+        }
+        const LevelData = {
+            id: levelId,
+            name: levelName,
+            creator: userId,
+            levelData: {
+                blocks: this.blocks.map((block) => ({
+                    x: block.x,
+                    y: block.y,
+                    blockId: block.blockId,
+                    baseId: block.baseId,
+                    rotation: block.rotation,
+                })),
+                enemies: this.enemies.map((enemy) => ({
+                    x: enemy.x,
+                    y: enemy.y,
+                    enemyId: enemy.enemyId,
+                    baseId: enemy.baseId,
+                })),
+                startPoint: {
+                    x: this.startPoint!.x,
+                    y: this.startPoint!.y,
+                },
+                endPoint: {
+                    x: this.endPoint.x,
+                    y: this.endPoint.y,
+                },
+
+                theme: this.levelTheme,
+                backgroundId: this.currentBackground?.texture.key,
+            },
+        };
+
+        try {
+            await publishLevel(LevelData, levelId);
+            EventBus.emit("levelPublished");
+        } catch (error) {
+            EventBus.emit("error", "Failed to save level");
+        }
+    }
 
     private testLevel() {
         if (!this.startPoint) {
@@ -401,12 +405,12 @@ export class LevelCreator extends Scene {
             return;
         }
 
-        const currentBackgroundId = gameBackgrounds.find(
-            (bg) => bg.id === this.currentBackground.texture.key,
-        )?.id;
+        const currentBackgroundId =
+            gameBackgrounds.find(
+                (bg) => bg.id === this.currentBackground.texture.key,
+            )?.id || gameBackgrounds[0].id;
 
-        const gameState = {
-            testMode: true,
+        const gameState: LevelData = {
             blocks: this.blocks.map((block) => ({
                 x: block.x,
                 y: block.y,
@@ -435,8 +439,9 @@ export class LevelCreator extends Scene {
             theme: this.levelTheme,
             backgroundId: currentBackgroundId,
         };
+
         if (this.startPoint) {
-            this.scene.start("PlayGame", gameState);
+            this.scene.start("TestGame", gameState);
             EventBus.emit("testModeReady");
         }
     }
@@ -445,10 +450,5 @@ export class LevelCreator extends Scene {
         this.levelTheme = theme;
         this.scene.restart();
     }
-
-    private handleRotate = () => {
-        this.currentRotation = (this.currentRotation + 90) % 360;
-        EventBus.emit("rotationChanged", this.currentRotation);
-    };
 }
 

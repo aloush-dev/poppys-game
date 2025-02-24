@@ -1,31 +1,29 @@
 export interface LevelData {
     id?: string;
-    name: string;
-    backgroundId?: string;
-    blocks: BlockData[];
-    enemies?: EnemyData[];
-    startPoint: PointData;
-    endPoint: PointData;
-    creator: string;
-    createdAt: number;
-    theme: LevelThemes;
-    testMode?: boolean;
-}
-
-export interface StoredLevelData {
-    id: string;
-    name: string;
     backgroundId: string;
     blocks?: BlockData[];
     enemies?: EnemyData[];
-    startPoint: PointData;
-    endPoint: PointData;
+    startPoint?: PointData | null;
+    endPoint?: PointData | null;
+    theme: LevelThemes;
+}
+
+export interface LevelDataToPost {
+    id?: string;
+    name: string;
+    creator: string;
+    levelData: LevelData;
+}
+
+export interface SavedLevel {
+    id: string;
+    name: string;
     creator: string;
     createdAt: number;
-    theme: LevelThemes;
-    testMode?: boolean;
     plays: number;
+    completes: number;
     likes: number;
+    levelData: Omit<LevelData, "testMode">;
 }
 
 export type LevelThemes = "candy" | "standard";
@@ -54,11 +52,6 @@ export interface BlockConfig {
     asset: string;
     displayName: string;
     baseId: string;
-    physics?: {
-        bounce?: number;
-        friction?: number;
-        isStatic?: boolean;
-    };
 }
 
 export interface EnemyConfig {
@@ -66,11 +59,6 @@ export interface EnemyConfig {
     asset: string;
     displayName: string;
     baseId: string;
-    physics?: {
-        bounce?: number;
-        friction?: number;
-        isStatic?: boolean;
-    };
 }
 
 export interface EnemyData {
@@ -84,7 +72,6 @@ export interface BlockData {
     x: number;
     y: number;
     blockId: string;
-    rotation: number;
     baseId: string;
 }
 

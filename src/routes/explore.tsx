@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { LevelCard } from "../app/components/LevelCard";
+import { LevelCard } from "../app/components/LevelCards";
 import { useState } from "react";
 
 export const Route = createFileRoute("/explore")({
@@ -72,7 +72,7 @@ function RouteComponent() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredAndSortedLevels.map((level) => (
-                    <LevelCard key={level.id} {...level} />
+                    <LevelCard key={level.id} level={level} />
                 ))}
             </div>
             {filteredAndSortedLevels.length === 0 && (

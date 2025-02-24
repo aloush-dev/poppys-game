@@ -1,7 +1,9 @@
 import { Game } from "phaser";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
-import { LevelCreator } from "./scenes/LevelCreator";
-import { PlayGame } from "./scenes/PlayGame";
+import { LevelEditor } from "./scenes/LevelEditor/LevelEditor";
+import { PlayGame } from "@/game/scenes/GameScreen/PlayGame";
+import { LevelData } from "../lib/types";
+import { TestGame } from "./scenes/GameScreen/TestGame";
 
 export interface IRefPhaserGame {
     game: Game | null;
@@ -9,12 +11,15 @@ export interface IRefPhaserGame {
 
 interface PhaserGameProps {
     scene: "create" | "play";
+    levelData?: LevelData;
+    levelId?: string;
 }
 
 export const PhaserGame = forwardRef<IRefPhaserGame, PhaserGameProps>(
-    ({ scene }, ref) => {
+    ({ levelData, levelId }, ref) => {
         const gameRef = useRef<Game | null>(null);
         const containerRef = useRef<HTMLDivElement>(null);
+        const initializedRef = useRef(false);
 
         useImperativeHandle(ref, () => ({
             game: gameRef.current,
@@ -39,16 +44,50 @@ export const PhaserGame = forwardRef<IRefPhaserGame, PhaserGameProps>(
                         debug: process.env.NODE_ENV === "development",
                     },
                 },
-                scene: [LevelCreator, PlayGame],
+                scene: [LevelEditor, PlayGame, TestGame],
             };
 
             gameRef.current = new Game(config);
 
+            if (levelData) {
+                gameRef.current.scene.start("LevelEditor", {
+                    levelData,
+                    id: levelId,
+                });
+                initializedRef.current = true;
+            }
+
             return () => {
                 gameRef.current?.destroy(true);
                 gameRef.current = null;
+                initializedRef.current = false;
             };
-        }, [scene]);
+        }, []);
+
+        // useEffect(() => {
+        //     if (gameRef.current && levelData && initializedRef.current) {
+        //         if (gameRef.current.scene.isActive("LevelEditor")) {
+        //             gameRef.current.scene.start("LevelEditor", {
+        //                 levelData,
+        //                 id: levelId,
+        //             });
+        //         } else {
+        //             gameRef.current.scene.start("LevelEditor", {
+        //                 levelData,
+        //                 id: levelId,
+        //             });
+        //         }
+        //     }
+        // }, [levelData, levelId]);
+
+        useEffect(() => {
+            if (gameRef.current && levelData) {
+                gameRef.current.scene.start("LevelEditor", {
+                    levelData,
+                    id: levelId,
+                });
+            }
+        }, [levelData, levelId]);
 
         return <div ref={containerRef} className="w-full h-full" />;
     },
