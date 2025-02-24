@@ -5,6 +5,7 @@ import {
     signInWithEmailAndPassword,
 } from "firebase/auth";
 import { auth } from "../../firebase/config";
+import { createDBUser } from "../../firebase/firestore";
 
 interface LoginSignupFormProps {
     onClose?: () => void;
@@ -12,6 +13,7 @@ interface LoginSignupFormProps {
 
 const LoginSignupForm: React.FC<LoginSignupFormProps> = ({ onClose }) => {
     const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isLogin, setIsLogin] = useState(true);
@@ -30,7 +32,23 @@ const LoginSignupForm: React.FC<LoginSignupFormProps> = ({ onClose }) => {
             if (isLogin) {
                 await signInWithEmailAndPassword(auth, email, password);
             } else {
-                await createUserWithEmailAndPassword(auth, email, password);
+                await createUserWithEmailAndPassword(
+                    auth,
+                    email,
+                    password,
+                ).then(async (data) => {
+                    if (auth.currentUser) {
+                        try {
+                            await createDBUser(data.user.uid, username);
+                        } catch (error) {
+                            console.error("Error creating user", error);
+                            setError("Error creating user, please try again");
+                            if (error instanceof Error) {
+                                throw error;
+                            }
+                        }
+                    }
+                });
             }
             if (onClose) onClose();
         } catch (error) {
@@ -68,6 +86,21 @@ const LoginSignupForm: React.FC<LoginSignupFormProps> = ({ onClose }) => {
                     required
                 />
             </div>
+
+            <div>
+                <label htmlFor="username" className="block mb-1">
+                    Username
+                </label>
+                <input
+                    type="text"
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full px-3 py-2 border rounded"
+                    required
+                />
+            </div>
+
             <div>
                 <label htmlFor="password" className="block mb-1">
                     Password

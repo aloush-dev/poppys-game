@@ -12,6 +12,22 @@ export interface LevelData {
     testMode?: boolean;
 }
 
+export interface StoredLevelData {
+    id: string;
+    name: string;
+    backgroundId: string;
+    blocks?: BlockData[];
+    enemies?: EnemyData[];
+    startPoint: PointData;
+    endPoint: PointData;
+    creator: string;
+    createdAt: number;
+    theme: LevelThemes;
+    testMode?: boolean;
+    plays: number;
+    likes: number;
+}
+
 export type LevelThemes = "candy" | "standard";
 
 export interface PointData {

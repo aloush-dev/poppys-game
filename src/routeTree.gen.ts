@@ -15,6 +15,7 @@ import { Route as PlayImport } from './routes/play'
 import { Route as ExploreImport } from './routes/explore'
 import { Route as CreateImport } from './routes/create'
 import { Route as IndexImport } from './routes/index'
+import { Route as UserUsernameImport } from './routes/user/$username'
 
 // Create/Update Routes
 
@@ -39,6 +40,12 @@ const CreateRoute = CreateImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const UserUsernameRoute = UserUsernameImport.update({
+  id: '/user/$username',
+  path: '/user/$username',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -74,6 +81,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayImport
       parentRoute: typeof rootRoute
     }
+    '/user/$username': {
+      id: '/user/$username'
+      path: '/user/$username'
+      fullPath: '/user/$username'
+      preLoaderRoute: typeof UserUsernameImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -84,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/play': typeof PlayRoute
+  '/user/$username': typeof UserUsernameRoute
 }
 
 export interface FileRoutesByTo {
@@ -91,6 +106,7 @@ export interface FileRoutesByTo {
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/play': typeof PlayRoute
+  '/user/$username': typeof UserUsernameRoute
 }
 
 export interface FileRoutesById {
@@ -99,14 +115,15 @@ export interface FileRoutesById {
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/play': typeof PlayRoute
+  '/user/$username': typeof UserUsernameRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/create' | '/explore' | '/play'
+  fullPaths: '/' | '/create' | '/explore' | '/play' | '/user/$username'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create' | '/explore' | '/play'
-  id: '__root__' | '/' | '/create' | '/explore' | '/play'
+  to: '/' | '/create' | '/explore' | '/play' | '/user/$username'
+  id: '__root__' | '/' | '/create' | '/explore' | '/play' | '/user/$username'
   fileRoutesById: FileRoutesById
 }
 
@@ -115,6 +132,7 @@ export interface RootRouteChildren {
   CreateRoute: typeof CreateRoute
   ExploreRoute: typeof ExploreRoute
   PlayRoute: typeof PlayRoute
+  UserUsernameRoute: typeof UserUsernameRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -122,6 +140,7 @@ const rootRouteChildren: RootRouteChildren = {
   CreateRoute: CreateRoute,
   ExploreRoute: ExploreRoute,
   PlayRoute: PlayRoute,
+  UserUsernameRoute: UserUsernameRoute,
 }
 
 export const routeTree = rootRoute
@@ -137,7 +156,8 @@ export const routeTree = rootRoute
         "/",
         "/create",
         "/explore",
-        "/play"
+        "/play",
+        "/user/$username"
       ]
     },
     "/": {
@@ -151,6 +171,9 @@ export const routeTree = rootRoute
     },
     "/play": {
       "filePath": "play.tsx"
+    },
+    "/user/$username": {
+      "filePath": "user/$username.tsx"
     }
   }
 }

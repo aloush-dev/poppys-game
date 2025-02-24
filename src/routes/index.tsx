@@ -22,7 +22,7 @@ function Index() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-noheader-screen bg-gray-100">
             <header className="bg-blue-600 text-white">
                 <div className="container mx-auto px-4 py-16 text-center">
                     <h1 className="text-4xl md:text-6xl font-bold mb-4">
@@ -84,45 +84,6 @@ function Index() {
                     </div>
                 </div>
             </section>
-
-            <section className="bg-gray-200 py-16">
-                <div className="container mx-auto px-4">
-                    <h2 className="text-3xl font-bold text-center mb-8">
-                        Featured Levels
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="bg-white p-6 rounded-lg shadow">
-                            <h3 className="text-xl font-semibold mb-4">
-                                Sky High Adventure
-                            </h3>
-                            <p>
-                                A challenging level with floating platforms and
-                                tricky jumps.
-                            </p>
-                        </div>
-                        <div className="bg-white p-6 rounded-lg shadow">
-                            <h3 className="text-xl font-semibold mb-4">
-                                Underground Maze
-                            </h3>
-                            <p>
-                                Navigate through a complex underground
-                                labyrinth.
-                            </p>
-                        </div>
-                        <div className="bg-white p-6 rounded-lg shadow">
-                            <h3 className="text-xl font-semibold mb-4">
-                                Lava Run
-                            </h3>
-                            <p>
-                                Can you make it across the platforms before the
-                                lava rises?
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-
 
             {showLoginModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">

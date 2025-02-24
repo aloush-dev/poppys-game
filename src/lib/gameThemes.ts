@@ -5,16 +5,17 @@ export const gameThemes: Record<string, ThemeConfig> = {
         name: "standard",
         blockSize: 64,
         blocks: [
-            // {
-            //     id: "block_orange",
-            //     asset: "block_orange.png",
-            //     displayName: "Orange Block",
-            // },
+            {
+                id: "block_orange",
+                asset: "block_orange.png",
+                displayName: "Orange Block",
+                baseId: "block_2",
+            },
             {
                 id: "standard_block_with_top",
                 asset: "block_grass.png",
                 displayName: "Grass Block",
-                baseId: "block_with_top",
+                baseId: "block_1",
             },
             // {
             //     id: "block_blue",
@@ -46,8 +47,14 @@ export const gameThemes: Record<string, ThemeConfig> = {
                 id: "candy_block_with_top",
                 asset: "block_cake_mid.png",
                 displayName: "Cake Mid",
-                baseId: "block_with_top",
+                baseId: "block_1",
             },
+            {
+                id: 'chocolate_block',
+                asset: 'block_chocolate_mid.png',
+                displayName: 'Chocolate Mid',
+                baseId: 'block_2',
+            }
         ],
         enemies: [
             {

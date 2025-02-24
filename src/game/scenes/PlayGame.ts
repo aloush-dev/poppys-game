@@ -84,6 +84,16 @@ export class PlayGame extends Scene {
         }
     }
 
+    update() {
+        if (!this.player) return;
+
+        this.handlePlayerMovement();
+
+        if (this.player.y > this.scale.height) {
+            this.handlePlayerDeath();
+        }
+    }
+
     private setupLevel(state: LevelData) {
         const themeConfig = gameThemes[state.theme || this.levelData.theme];
 
@@ -201,6 +211,16 @@ export class PlayGame extends Scene {
                 );
             });
         });
+
+        if (this.endPoint) {
+            this.physics.add.overlap(
+                this.player,
+                this.endPoint,
+                () => this.handleLevelComplete(),
+                undefined,
+                this,
+            );
+        }
     }
 
     private setupAnimations() {
@@ -258,16 +278,6 @@ export class PlayGame extends Scene {
             });
     }
 
-    update() {
-        if (!this.player) return;
-
-        this.handlePlayerMovement();
-
-        if (this.player.y > this.scale.height) {
-            this.handlePlayerDeath();
-        }
-    }
-
     private handlePlayerDeath() {
         this.player.setTint(0xff0000);
         this.player.setVelocity(0, 0);
@@ -322,5 +332,25 @@ export class PlayGame extends Scene {
     private restartLevel() {
         this.scene.restart(this.levelData);
     }
+
+    private handleLevelComplete = () => {
+        this.player.body!.enable = false;
+        this.player.setVelocity(0, 0);
+
+        this.player.setTint(0x00ff00);
+
+        this.time.delayedCall(500, () => {
+            if (this.levelData.testMode) {
+                EventBus.emit("editorMode");
+                this.scene.start("LevelCreator", this.levelData);
+            } else {
+                EventBus.emit("levelComplete", this.levelData);
+                this.scene.start("GameOver", {
+                    success: true,
+                    levelData: this.levelData,
+                });
+            }
+        });
+    };
 }
 

@@ -46,6 +46,7 @@ export class EndPoint extends Phaser.GameObjects.Sprite {
         this.setOrigin(0, 0);
         this.setDisplaySize(32, 32);
         scene.add.existing(this);
+        scene.physics.add.existing(this);
         this.setInteractive();
         scene.input.setDraggable(this);
         scene.input.on(
