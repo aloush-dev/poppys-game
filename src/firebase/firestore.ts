@@ -1,28 +1,69 @@
 import {
     addDoc,
     collection,
+    doc,
     getDocs,
     query,
     serverTimestamp,
+    updateDoc,
     where,
 } from "firebase/firestore";
 import { LevelData, StoredLevelData } from "../lib/types";
 import { db } from "./config";
 import { DBUser } from "../lib/dbTypes";
 
-export const SaveLevel = async (levelData: LevelData) => {
+export const SaveLevel = async (levelData: LevelData, levelId?: string) => {
     try {
-        const docRef = await addDoc(collection(db, "levels"), levelData);
-        return docRef.id;
+        if (levelId) {
+            const levelQuery = query(
+                collection(db, "levels"),
+                where("id", "==", levelId),
+            );
+            const levelDocs = await getDocs(levelQuery);
+            if (!levelDocs.empty) {
+                const docRef = doc(db, "levels", levelDocs.docs[0].id);
+                await updateDoc(docRef, {
+                    ...levelData,
+                    published: false,
+                    updatedAt: serverTimestamp(),
+                });
+                return levelDocs.docs[0].id;
+            }
+        } else {
+            const docRef = await addDoc(collection(db, "levels"), {
+                ...levelData,
+                published: false,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            });
+            return docRef.id;
+        }
     } catch (error) {
         console.error("Error Saving level", error);
         throw error;
     }
 };
 
-export const publishLevel = async (levelData?: LevelData, levelId?: string) => {
+export const publishLevel = async (levelData: LevelData, levelId?: string) => {
     try {
-        await addDoc(collection(db, "publishedLevels"), { levelId });
+        if (levelId) {
+            const levelQuery = query(
+                collection(db, "levels"),
+                where("id", "==", levelId),
+            );
+            const levelDocs = await getDocs(levelQuery);
+            if (!levelDocs.empty) {
+                const docRef = doc(db, "levels", levelDocs.docs[0].id);
+                await updateDoc(docRef, {
+                    ...levelData,
+                    published: true,
+                    updatedAt: serverTimestamp(),
+                });
+                return;
+            }
+        } else {
+            await addDoc(collection(db, "levels"), levelData);
+        }
     } catch (error) {
         console.error("Error publishing level", error);
         throw error;

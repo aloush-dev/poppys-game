@@ -44,6 +44,10 @@ function RouteComponent() {
         setShowSaveModal(false);
     };
 
+    if (!user) {
+        return <div>You must be logged in to create a level</div>;
+    }
+
     return (
         <div className="flex items-center justify-center h-noheader-screen w-full bg-slate-900 p-4">
             <div className="flex gap-4 w-full justify-center">

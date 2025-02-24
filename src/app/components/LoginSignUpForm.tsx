@@ -87,19 +87,21 @@ const LoginSignupForm: React.FC<LoginSignupFormProps> = ({ onClose }) => {
                 />
             </div>
 
-            <div>
-                <label htmlFor="username" className="block mb-1">
-                    Username
-                </label>
-                <input
-                    type="text"
-                    id="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-3 py-2 border rounded"
-                    required
-                />
-            </div>
+            {!isLogin && (
+                <div>
+                    <label htmlFor="username" className="block mb-1">
+                        Username
+                    </label>
+                    <input
+                        type="text"
+                        id="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="w-full px-3 py-2 border rounded"
+                        required
+                    />
+                </div>
+            )}
 
             <div>
                 <label htmlFor="password" className="block mb-1">

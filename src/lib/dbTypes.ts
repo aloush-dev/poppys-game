@@ -21,6 +21,7 @@ export interface DBLevel extends FirestoreDoc {
     theme: LevelThemes;
     published: boolean;
     plays: number;
+    completes: number;
     likes: number;
     data: {
         blocks: Array<{
