@@ -1,4 +1,4 @@
-import { PlayCircleIcon } from "lucide-react";
+import { Edit, PlayCircleIcon, Rocket } from "lucide-react";
 import { SavedLevel } from "../../lib/types";
 import { Link } from "@tanstack/react-router";
 
@@ -40,15 +40,18 @@ export const SavedLevelCard = ({ level }: { level: SavedLevel }) => {
             <div className="p-4">
                 <div className="flex flex-col justify-between items-center">
                     <h3 className="font-bold text-lg mb-2">{level.name}</h3>
-                    <div>
+                    <div className="flex justify-between items-center w-full gap-2">
                         <Link
                             to="/create"
                             search={{ levelId: level.id }}
-                            className="bg-yellow-500 text-white px-4 py-2 rounded-md"
+                            className="bg-yellow-500 text-white px-2 py-1 rounded-md flex justify-center items-center gap-1"
                         >
-                            EDIT
+                            <Edit size={14} />
+                            edit
                         </Link>
-                        <button>publish</button>
+                        <button className="flex bg-green-500 text-white px-2 py-1 rounded-md justify-center items-center gap-1">
+                            <Rocket size={14} /> publish
+                        </button>
                     </div>
                 </div>
                 <div className="flex justify-between items-center"></div>

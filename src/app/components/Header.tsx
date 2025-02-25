@@ -68,7 +68,7 @@ export const Header = ({ onLoginClick }: { onLoginClick: () => void }) => {
                                         </span>
                                     </button>
                                     {profileDropdownOpen && (
-                                        <div className="absolute top-12 right-0 w-48 bg-white text-black shadow-lg rounded-md overflow-hidden">
+                                        <div className="absolute top-12 right-0 w-48 z-100 bg-white text-black shadow-lg rounded-md overflow-hidden">
                                             <Link
                                                 to="/profile"
                                                 className="block px-4 py-2 hover:bg-gray-100 transition-colors"
