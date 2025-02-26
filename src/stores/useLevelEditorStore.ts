@@ -7,6 +7,8 @@ import {
     EditorTool,
     LevelThemes,
 } from "@/lib/types";
+import { useModalStore } from "./useModalStore";
+import { SaveLevelToDb } from "@/firebase/firestore";
 
 interface LevelEditorState {
     levelData: LevelData;
@@ -30,6 +32,8 @@ interface LevelEditorState {
     setEndPoint: (point: PointData | null) => void;
 
     setGame(game: Phaser.Game | null): void;
+
+    saveLevel: () => void;
     testLevel: () => void;
     resetLevel: () => void;
 }
@@ -167,9 +171,22 @@ export const useLevelEditorStore = create<LevelEditorState>()((set, get) => ({
 
     setGame: (game) => set({ game }),
 
+    saveLevel: async () => {
+        const { openModal } = useModalStore.getState();
+        const { levelData } = get();
+
+        if (levelData.name) {
+            await SaveLevelToDb(levelData, levelData.id);
+        } else {
+            openModal("save", "Save Level");
+        }
+    },
+
     testLevel: () => {
+        const { openModal } = useModalStore.getState();
         const { levelData, game } = get();
         if (!levelData.startPoint) {
+            openModal("error", "No start point set");
             console.error("No start point set");
             return;
         }

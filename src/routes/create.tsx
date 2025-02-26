@@ -1,12 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { IRefPhaserGame, PhaserGame } from "../game/PhaserGame";
 import { Toolbar } from "../game/components/Toolbar";
-import { useAuth } from "../lib/useAuth";
-// import { EventBus } from "../game/EventBus";
-// import { ErrorModal } from "../app/components/ErrorModal";
-// import { SaveLevelModal } from "../app/components/SaveModal";
 import { getLevelById } from "../firebase/firestore";
+import { useAuth } from "@/lib/useAuth";
+import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
 
 interface SearchParams {
     levelId?: string;
@@ -44,11 +42,20 @@ export const Route = createFileRoute("/create")({
 
 function RouteComponent() {
     const phaserRef = useRef<IRefPhaserGame | null>(null);
-    // const [error, setError] = useState<string | null>(null);
-    // const [showSaveModal, setShowSaveModal] = useState(false);
-    // const [showPublishModal, setShowPublishModal] = useState(false);
     const { user } = useAuth();
+    const { setLevelData } = useLevelEditorStore();
+    const { level } = Route.useLoaderData();
 
+    useEffect(() => {
+        if (level) {
+            setLevelData(level);
+            console.log("Level loaded:", level);
+        }
+    }, [level, setLevelData]);
+
+    if (user?.uid !== level?.creator) {
+        return <div>You do not have permission to edit this level</div>;
+    }
     if (!user) {
         return <div>You must be logged in to create a level</div>;
     }
@@ -61,25 +68,6 @@ function RouteComponent() {
                     <PhaserGame ref={phaserRef} scene="create" />
                 </div>
             </div>
-
-            {/* {error && (
-                <ErrorModal errorMsg={error} onClose={() => setError(null)} />
-            )} */}
-
-            {/* {showSaveModal && (
-                <SaveLevelModal
-                    onClose={() => setShowSaveModal(false)}
-                    onSave={handleSaveLevel}
-                    initialName={level?.name}
-                />
-            )} */}
-
-            {/* {showPublishModal && (
-                <PublishModal
-                    onClose={() => setShowPublishModal(false)}
-                    onPublish={handlePublishLevel}
-                />
-            )} */}
         </div>
     );
 }

@@ -1,5 +1,7 @@
 export interface LevelData {
     id?: string;
+    name?: string;
+    creator?: string;
     backgroundId: string;
     blocks?: BlockData[];
     enemies?: EnemyData[];
@@ -8,22 +10,12 @@ export interface LevelData {
     theme: LevelThemes;
 }
 
-export interface LevelDataToPost {
-    id?: string;
-    name: string;
-    creator: string;
-    levelData: LevelData;
-}
-
-export interface SavedLevel {
+export interface SavedLevel extends LevelData {
     id: string;
-    name: string;
-    creator: string;
     createdAt: number;
     plays: number;
     completes: number;
     likes: number;
-    levelData: Omit<LevelData, "testMode">;
 }
 
 export type LevelThemes = "candy" | "standard";

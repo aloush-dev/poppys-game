@@ -63,7 +63,6 @@ export class LevelEditor extends Scene {
         });
 
         this.setupStoreSubscriptions();
-        console.log("LevelEditor created, rendering from store...");
 
         this.renderFromStore();
     }
@@ -115,7 +114,6 @@ export class LevelEditor extends Scene {
         }
 
         const store = useLevelEditorStore.getState();
-        console.log("Rendering from store, levelData:", store.levelData);
 
         try {
             this.cleanupGameObjects();
@@ -129,9 +127,6 @@ export class LevelEditor extends Scene {
                     store.levelData.blocks &&
                     store.levelData.blocks.length > 0
                 ) {
-                    console.log(
-                        `Creating ${store.levelData.blocks.length} blocks`,
-                    );
                     this.syncBlocks(store.levelData.blocks);
                 }
 
@@ -139,9 +134,6 @@ export class LevelEditor extends Scene {
                     store.levelData.enemies &&
                     store.levelData.enemies.length > 0
                 ) {
-                    console.log(
-                        `Creating ${store.levelData.enemies.length} enemies`,
-                    );
                     this.syncEnemies(store.levelData.enemies);
                 }
 
