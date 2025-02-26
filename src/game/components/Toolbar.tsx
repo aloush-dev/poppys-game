@@ -1,5 +1,4 @@
 import { Trash } from "lucide-react";
-import { EventBus } from "../EventBus";
 // import { LevelThemes } from "../../lib/types";
 import { gameBackgrounds, gameThemes } from "../../lib/gameThemes";
 import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
@@ -15,7 +14,7 @@ export const Toolbar = () => {
 
     const themeConfig = gameThemes[levelData.theme];
 
-    const { saveLevel } = useLevelEditorStore();
+    const { saveLevel, publishLevel } = useLevelEditorStore();
 
     return (
         <div className="flex flex-col gap-2 bg-slate-500 p-2 rounded-lg shadow-lg items-start">
@@ -153,9 +152,7 @@ export const Toolbar = () => {
 
             <button
                 className="w-full h-12 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs"
-                onClick={() => {
-                    EventBus.emit("publishLevel");
-                }}
+                onClick={() => publishLevel()}
             >
                 Publish
             </button>

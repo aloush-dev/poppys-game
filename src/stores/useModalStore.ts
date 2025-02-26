@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { create } from "zustand";
 
-type ModalType = "custom" | "error" | "login" | "save";
+type ModalType = "custom" | "error" | "login" | "save" | "publish";
 interface ModalState {
     modalType: ModalType | null;
     modalOpen: boolean;

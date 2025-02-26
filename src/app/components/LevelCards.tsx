@@ -1,4 +1,4 @@
-import { Edit, PlayCircleIcon, Rocket, Trash } from "lucide-react";
+import { Edit, Play, PlayCircleIcon, Rocket, Trash } from "lucide-react";
 import { SavedLevel } from "../../lib/types";
 import { Link } from "@tanstack/react-router";
 import { deleteSavedLevel } from "@/firebase/firestore";
@@ -59,6 +59,30 @@ export const SavedLevelCard = ({ level }: { level: SavedLevel }) => {
                         >
                             <Trash size={14} /> delete
                         </button>
+                    </div>
+                </div>
+                <div className="flex justify-between items-center"></div>
+            </div>
+        </div>
+    );
+};
+
+export const PublishedLevelCard = ({ level }: { level: SavedLevel }) => {
+    return (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-gray-200 h-40"></div>
+            <div className="p-4">
+                <div className="flex flex-col justify-between items-center">
+                    <h3 className="font-bold text-lg mb-2">{level.name}</h3>
+                    <div className="flex justify-between items-center w-full gap-2">
+                        <Link
+                            to="/play"
+                            search={{ levelId: level.id }}
+                            className="bg-yellow-500 text-white px-2 py-1 rounded-md flex justify-center items-center gap-1"
+                        >
+                            <Play size={14} />
+                            play
+                        </Link>
                     </div>
                 </div>
                 <div className="flex justify-between items-center"></div>

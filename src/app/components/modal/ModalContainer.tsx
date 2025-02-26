@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import LoginSignupForm from "../LoginSignUpForm";
 import { ErrorModal } from "./ErrorModal";
 import { SaveModal } from "./SaveModal";
+import { PublishModal } from "./PublishModal";
 
 export const ModalContainer = () => {
     const { closeModal, modalContents, modalType } = useModalStore();
@@ -47,6 +48,7 @@ export const ModalContainer = () => {
                     <LoginSignupForm onClose={closeModal} />
                 )}
                 {modalType === "save" && <SaveModal />}
+                {modalType === "publish" && <PublishModal />}
                 {modalType === "custom" && modalContents}
             </div>
         </div>

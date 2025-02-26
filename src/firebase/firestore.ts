@@ -56,7 +56,7 @@ export const SaveLevelToDb = async (levelData: LevelData, levelId?: string) => {
     }
 };
 
-export const publishLevel = async (levelData: LevelData, levelId?: string) => {
+export const publishLevelToDb = async (levelData: LevelData, levelId?: string) => {
     try {
         let docRef;
 

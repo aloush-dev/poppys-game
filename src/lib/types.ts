@@ -1,6 +1,7 @@
 export interface LevelData {
     id?: string;
     name?: string;
+    description?: string;
     creator?: string;
     backgroundId: string;
     blocks?: BlockData[];

@@ -33,6 +33,7 @@ interface LevelEditorState {
 
     setGame(game: Phaser.Game | null): void;
 
+    publishLevel: () => void;
     saveLevel: () => void;
     testLevel: () => void;
     resetLevel: () => void;
@@ -171,6 +172,17 @@ export const useLevelEditorStore = create<LevelEditorState>()((set, get) => ({
 
     setGame: (game) => set({ game }),
 
+    publishLevel: async () => {
+        const { openModal } = useModalStore.getState();
+        const { levelData } = get();
+        if (!levelData.startPoint || !levelData.endPoint) {
+            openModal("error", "Level must have a start and end point");
+            return;
+        }
+
+        openModal("publish", "Publish Level");
+    },
+
     saveLevel: async () => {
         const { openModal } = useModalStore.getState();
         const { levelData } = get();
@@ -187,7 +199,6 @@ export const useLevelEditorStore = create<LevelEditorState>()((set, get) => ({
         const { levelData, game } = get();
         if (!levelData.startPoint) {
             openModal("error", "No start point set");
-            console.error("No start point set");
             return;
         }
 

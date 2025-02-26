@@ -49,11 +49,10 @@ function RouteComponent() {
     useEffect(() => {
         if (level) {
             setLevelData(level);
-            console.log("Level loaded:", level);
         }
     }, [level, setLevelData]);
 
-    if (user?.uid !== level?.creator) {
+    if (level && user?.uid !== level?.creator) {
         return <div>You do not have permission to edit this level</div>;
     }
     if (!user) {
