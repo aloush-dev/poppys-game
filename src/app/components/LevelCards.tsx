@@ -1,6 +1,7 @@
-import { Edit, PlayCircleIcon, Rocket } from "lucide-react";
+import { Edit, PlayCircleIcon, Rocket, Trash } from "lucide-react";
 import { SavedLevel } from "../../lib/types";
 import { Link } from "@tanstack/react-router";
+import { deleteSavedLevel } from "@/firebase/firestore";
 
 export const LevelCard = ({ level }: { level: SavedLevel }) => {
     return (
@@ -51,6 +52,12 @@ export const SavedLevelCard = ({ level }: { level: SavedLevel }) => {
                         </Link>
                         <button className="flex bg-green-500 text-white px-2 py-1 rounded-md justify-center items-center gap-1">
                             <Rocket size={14} /> publish
+                        </button>
+                        <button
+                            className="flex bg-red-500 text-white px-2 py-1 rounded-md justify-center items-center gap-1"
+                            onClick={() => deleteSavedLevel(level.id)}
+                        >
+                            <Trash size={14} /> delete
                         </button>
                     </div>
                 </div>

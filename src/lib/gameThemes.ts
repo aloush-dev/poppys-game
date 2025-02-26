@@ -17,16 +17,6 @@ export const gameThemes: Record<string, ThemeConfig> = {
                 displayName: "Grass Block",
                 baseId: "block_1",
             },
-            // {
-            //     id: "block_blue",
-            //     asset: "block_blue.png",
-            //     displayName: "Blue Block",
-            // },
-            // {
-            //     id: "block_yellow",
-            //     asset: "block_yellow.png",
-            //     displayName: "Yellow Block",
-            // },
         ],
         enemies: [
             {
@@ -50,11 +40,11 @@ export const gameThemes: Record<string, ThemeConfig> = {
                 baseId: "block_1",
             },
             {
-                id: 'chocolate_block',
-                asset: 'block_chocolate_mid.png',
-                displayName: 'Chocolate Mid',
-                baseId: 'block_2',
-            }
+                id: "chocolate_block",
+                asset: "block_chocolate_mid.png",
+                displayName: "Chocolate Mid",
+                baseId: "block_2",
+            },
         ],
         enemies: [
             {

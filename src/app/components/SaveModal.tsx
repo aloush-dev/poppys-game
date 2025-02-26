@@ -3,11 +3,13 @@ import { useState } from "react";
 export const SaveLevelModal = ({
     onClose,
     onSave,
+    initialName,
 }: {
     onClose: () => void;
     onSave: (name: string) => void;
+    initialName?: string;
 }) => {
-    const [levelName, setLevelName] = useState("");
+    const [levelName, setLevelName] = useState(initialName || "");
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

@@ -1,142 +1,157 @@
 import { Scene } from "phaser";
 import { Block } from "@/game/tools/Block";
-import { EndPoint, StartPoint } from "@/game/tools/Points";
-import { LevelData, LevelThemes } from "@/lib/types";
-import { gameBackgrounds, gameThemes } from "@/lib/gameThemes";
 import { Enemy } from "@/game/tools/Enemy";
-import { EventBus } from "@/game/EventBus";
-import { setupLevel } from "../setupLevel";
+import { EndPoint, StartPoint } from "@/game/tools/Points";
+import { gameBackgrounds, gameThemes } from "@/lib/gameThemes";
+import { BlockData, EnemyData, LevelData } from "@/lib/types";
+import { loadThemeAssets } from "../SceneSetup";
 
 export class TestGame extends Scene {
-    blocks: Block[] = [];
-    enemies: Enemy[] = [];
-    startPoint: StartPoint | null = null;
-    endPoint: EndPoint | null = null;
-    player: Phaser.Physics.Arcade.Sprite;
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-    jumpKey: Phaser.Input.Keyboard.Key;
-    levelData: LevelData;
-    currentBackground: Phaser.GameObjects.Image;
-    levelTheme: LevelThemes;
-    levelId?: string;
+    public blocks: { [key: string]: Block } = {};
+    public enemies: { [key: string]: Enemy } = {};
+    public startPoint: StartPoint | null = null;
+    public endPoint: EndPoint | null = null;
+    public currentBackground: Phaser.GameObjects.Image;
+    public jumpKey: Phaser.Input.Keyboard.Key;
 
-    readonly PLAYER_SPEED = 160;
-    readonly JUMP_VELOCITY = -330;
+    private player: Phaser.Physics.Arcade.Sprite;
+    private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+
+    private levelData: LevelData;
+    private levelComplete = false;
 
     constructor() {
         super({ key: "TestGame" });
     }
 
-    init(data: LevelData) {
-        this.levelData = data;
-        this.levelId = data.id;
+    init(data: { levelData: LevelData }) {
+        this.levelData = data.levelData;
     }
 
     preload() {
-        const themeConfig = gameThemes[this.levelData.theme];
-
-        themeConfig.blocks.forEach((block) => {
-            this.load.image(block.id, this.getThemeAssetPath(block.asset));
-        });
-
-        themeConfig.enemies?.forEach((enemy) => {
-            this.load.image(enemy.id, this.getThemeAssetPath(enemy.asset));
-        });
-
-        this.load.image(
-            "start",
-            this.getThemeAssetPath(themeConfig.startPoint),
-        );
-        this.load.image("end", this.getThemeAssetPath(themeConfig.endPoint));
+        loadThemeAssets(this, this.levelData);
 
         this.load.spritesheet("player", "assets/player.png", {
             frameWidth: 64,
             frameHeight: 64,
         });
-
-        gameBackgrounds.forEach((background) => {
-            this.load.image(
-                background.id,
-                `assets/theme_${this.levelData.theme}/backgrounds/${background.asset}`,
-            );
-        });
     }
-    create() {
-        const backgroundId =
-            this.levelData.backgroundId || gameBackgrounds[0].id;
-        const backgroundConfig = gameBackgrounds.find(
-            (bg) => bg.id === backgroundId,
-        );
 
-        if (backgroundConfig) {
-            this.currentBackground = this.add
-                .image(0, 0, backgroundId)
-                .setOrigin(0, 0)
-                .setScale(backgroundConfig.scale);
+    create() {
+        this.setupBackground();
+
+        this.createBlocks();
+        this.createEnemies();
+        this.createStartAndEndPoints();
+
+        if (this.levelData.startPoint) {
+            this.setupPlayer(
+                this.levelData.startPoint.x,
+                this.levelData.startPoint.y,
+            );
         }
 
-        setupLevel(this, this.levelData);
+        this.cursors = this.input.keyboard!.createCursorKeys();
+        this.jumpKey = this.input.keyboard!.addKey(
+            Phaser.Input.Keyboard.KeyCodes.SPACE,
+        );
 
-        this.setupPlayer(this.startPoint!.x, this.startPoint!.y);
-
-        this.setupAnimations();
-
-        this.setupControls();
-
-        this.setupTestModeUI();
+        this.createUI();
     }
 
     update() {
-        if (!this.player) return;
+        if (!this.player || this.levelComplete) return;
 
         this.handlePlayerMovement();
 
-        if (this.player.y > this.scale.height) {
-            this.handlePlayerDeath();
+        this.checkCollisions();
+    }
+
+    private setupBackground() {
+        if (!this.cameras?.main) {
+            console.warn("Camera not ready in setupBackground");
+            return;
+        }
+
+        const backgroundId = this.levelData.backgroundId || "background_1";
+        const background = gameBackgrounds.find((bg) => bg.id === backgroundId);
+
+        if (background) {
+            this.currentBackground = this.add.image(
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2,
+                backgroundId,
+            );
+            this.currentBackground.setScale(background.scale);
+            this.currentBackground.setDepth(-10);
+        }
+    }
+
+    private createBlocks() {
+        const blocks = this.levelData.blocks || [];
+
+        blocks.forEach((blockData: BlockData) => {
+            const key = `${blockData.x}-${blockData.y}`;
+            const theme = this.levelData.theme;
+            const blockConfig = this.getBlockConfig(blockData.blockId, theme);
+
+            if (blockConfig) {
+                this.blocks[key] = new Block(
+                    this,
+                    blockData.x,
+                    blockData.y,
+                    theme,
+                    blockConfig,
+                );
+            }
+        });
+    }
+
+    private createEnemies() {
+        const enemies = this.levelData.enemies || [];
+
+        enemies.forEach((enemyData: EnemyData) => {
+            const key = `${enemyData.x}-${enemyData.y}`;
+            const theme = this.levelData.theme;
+            const enemyConfig = this.getEnemyConfig(enemyData.enemyId, theme);
+
+            if (enemyConfig) {
+                this.enemies[key] = new Enemy(
+                    this,
+                    enemyData.x,
+                    enemyData.y,
+                    theme,
+                    enemyConfig,
+                );
+            }
+        });
+    }
+
+    private createStartAndEndPoints() {
+        if (this.levelData.startPoint) {
+            this.startPoint = new StartPoint(
+                this,
+                this.levelData.startPoint.x,
+                this.levelData.startPoint.y,
+            );
+        }
+
+        if (this.levelData.endPoint) {
+            this.endPoint = new EndPoint(
+                this,
+                this.levelData.endPoint.x,
+                this.levelData.endPoint.y,
+            );
         }
     }
 
     private setupPlayer(x: number, y: number) {
-        this.player = this.physics.add
-            .sprite(x + 16, y + 16, "player")
-            .setCollideWorldBounds(true)
-            .setGravityY(500)
-            .setOffset(0, 0)
-            .setSize(18, 32);
+        this.player = this.physics.add.sprite(x + 16, y + 16, "player");
+        this.player.setCollideWorldBounds(true);
+        this.player.setBounce(0.1);
+        this.player.setGravityY(500);
+        this.player.setSize(18, 32);
 
-        this.blocks.forEach((block) => {
-            // const collider =
-            this.physics.add.collider(
-                this.player,
-                block,
-                undefined,
-                undefined,
-                this,
-            );
-
-            this.enemies.forEach((enemy) => {
-                this.physics.add.collider(
-                    this.player,
-                    enemy,
-                    this.handleEnemyCollision,
-                    undefined,
-                    this,
-                );
-            });
-        });
-
-        if (this.endPoint) {
-            this.physics.add.overlap(
-                this.player,
-                this.endPoint,
-                () => this.handleLevelComplete(),
-                undefined,
-                this,
-            );
-        }
-    }
-
-    private setupAnimations() {
         this.anims.create({
             key: "idle",
             frames: this.anims.generateFrameNumbers("player", {
@@ -166,41 +181,8 @@ export class TestGame extends Scene {
             frameRate: 2,
             repeat: -1,
         });
-    }
-
-    private setupControls() {
-        this.cursors = this.input.keyboard!.createCursorKeys();
-        this.jumpKey = this.input.keyboard!.addKey(
-            Phaser.Input.Keyboard.KeyCodes.SPACE,
-        );
-    }
-
-    private setupTestModeUI() {
-        this.add
-            .text(16, 16, "Return to Editor", {
-                backgroundColor: "#444",
-                padding: { x: 10, y: 5 },
-                color: "#ffffff",
-            })
-            .setScrollFactor(0)
-            .setDepth(1000)
-            .setInteractive()
-            .on("pointerdown", () => {
-                EventBus.emit("editorMode");
-                this.scene.start("LevelEditor", {
-                    levelData: this.levelData,
-                    id: this.levelId,
-                });
-            });
-    }
-
-    private handlePlayerDeath() {
-        this.player.setTint(0xff0000);
-        this.player.setVelocity(0, 0);
-        this.player.body!.enable = false;
-
-        this.time.delayedCall(500, () => {
-            this.restartLevel();
+        Object.values(this.blocks).forEach((block) => {
+            this.physics.add.collider(this.player, block);
         });
     }
 
@@ -208,11 +190,11 @@ export class TestGame extends Scene {
         const onGround = this.player.body!.blocked.down;
 
         if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-this.PLAYER_SPEED);
+            this.player.setVelocityX(-160);
             this.player.setFlipX(true);
             if (onGround) this.player.anims.play("run", true);
         } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(this.PLAYER_SPEED);
+            this.player.setVelocityX(160);
             this.player.setFlipX(false);
             if (onGround) this.player.anims.play("run", true);
         } else {
@@ -221,7 +203,7 @@ export class TestGame extends Scene {
         }
 
         if ((this.jumpKey.isDown || this.cursors.up.isDown) && onGround) {
-            this.player.setVelocityY(this.JUMP_VELOCITY);
+            this.player.setVelocityY(-330);
             this.player.anims.play("jump", true);
         }
 
@@ -230,38 +212,126 @@ export class TestGame extends Scene {
         }
     }
 
-    private getThemeAssetPath(assetName: string): string {
-        return `assets/theme_${this.levelData.theme}/${assetName}`;
-    }
+    private checkCollisions() {
+        if (this.endPoint && this.physics.overlap(this.player, this.endPoint)) {
+            this.levelComplete = true;
+            this.showLevelCompleteMessage();
+        }
 
-    private handleEnemyCollision() {
-        this.player.setTint(0xff0000);
-
-        this.player.setVelocity(0);
-        this.player.body!.enable = false;
-
-        this.time.delayedCall(500, () => {
-            this.restartLevel();
+        Object.values(this.enemies).forEach((enemy) => {
+            if (this.physics.overlap(this.player, enemy)) {
+                this.handlePlayerDeath();
+            }
         });
     }
 
-    private restartLevel() {
-        this.scene.restart(this.levelData);
-    }
-
-    private handleLevelComplete = () => {
-        this.player.body!.enable = false;
+    private handlePlayerDeath() {
+        this.player.setTint(0xff0000);
         this.player.setVelocity(0, 0);
 
-        this.player.setTint(0x00ff00);
-
-        this.time.delayedCall(500, () => {
-            EventBus.emit("editorMode");
-            this.scene.start("LevelEditor", {
-                levelData: this.levelData,
-                id: this.levelId,
-            });
+        this.time.delayedCall(1000, () => {
+            if (this.levelData.startPoint) {
+                this.player.setPosition(
+                    this.levelData.startPoint.x,
+                    this.levelData.startPoint.y,
+                );
+                this.player.clearTint();
+            }
         });
-    };
+    }
+
+    private showLevelCompleteMessage() {
+        if (!this.cameras?.main) {
+            console.warn("Camera not ready in showLevelCompleteMessage");
+            return;
+        }
+
+        const textStyle = {
+            font: "32px Arial",
+            color: "#ffffff",
+            backgroundColor: "#000000",
+            padding: { x: 10, y: 5 },
+        };
+
+        const text = this.add.text(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
+            "Level Complete!",
+            textStyle,
+        );
+        text.setOrigin(0.5);
+        text.setScrollFactor(0);
+
+        const buttonStyle = {
+            font: "24px Arial",
+            color: "#ffffff",
+            backgroundColor: "#4a6c9b",
+            padding: { x: 15, y: 10 },
+        };
+
+        const button = this.add.text(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2 + 60,
+            "Back to Editor",
+            buttonStyle,
+        );
+        button.setOrigin(0.5);
+        button.setScrollFactor(0);
+        button.setInteractive({ useHandCursor: true });
+
+        button.on("pointerdown", () => {
+            this.returnToEditor();
+        });
+    }
+
+    private returnToEditor() {
+        this.scene.stop("TestGame");
+        this.scene.start("LevelEditor");
+    }
+
+    private createUI() {
+        if (!this.cameras?.main) {
+            console.warn("Camera not ready in createUI");
+            return;
+        }
+        const backButton = this.add.text(20, 20, "Back to Editor", {
+            font: "18px Arial",
+            color: "#ffffff",
+            backgroundColor: "#4a6c9b",
+            padding: { x: 10, y: 5 },
+        });
+        backButton.setScrollFactor(0);
+        backButton.setInteractive({ useHandCursor: true });
+
+        backButton.on("pointerdown", () => {
+            this.returnToEditor();
+        });
+    }
+
+    private getBlockConfig(blockId: string, theme: string) {
+        return gameThemes[theme].blocks.find(
+            (b) => b.id === blockId || b.baseId === blockId,
+        );
+    }
+
+    private getEnemyConfig(enemyId: string, theme: string) {
+        return gameThemes[theme].enemies?.find(
+            (e) => e.id === enemyId || e.baseId === enemyId,
+        );
+    }
+
+    shutdown() {
+        Object.values(this.blocks).forEach((block) => block.destroy());
+        Object.values(this.enemies).forEach((enemy) => enemy.destroy());
+        if (this.startPoint) this.startPoint.destroy();
+        if (this.endPoint) this.endPoint.destroy();
+        if (this.currentBackground) this.currentBackground.destroy();
+        if (this.player) this.player.destroy();
+
+        this.blocks = {};
+        this.enemies = {};
+        this.startPoint = null;
+        this.endPoint = null;
+    }
 }
 

@@ -1,6 +1,7 @@
 import {
     addDoc,
     collection,
+    deleteDoc,
     doc,
     getDoc,
     getDocs,
@@ -23,8 +24,8 @@ export const SaveLevel = async (
             const levelDoc = await getDoc(docRef);
 
             if (levelDoc.exists()) {
-                const levelData = levelDoc.data();
-                if (levelData.published) {
+                const existingLevel = levelDoc.data();
+                if (existingLevel.published) {
                     throw new Error("Cannot edit a published level");
                 }
 
@@ -219,6 +220,15 @@ export const getUserByUsername = async (username: string) => {
         }))[0] as DBUser;
     } catch (error) {
         console.error("Error getting user by username", error);
+        throw error;
+    }
+};
+
+export const deleteSavedLevel = async (levelId: string) => {
+    try {
+        await deleteDoc(doc(db, "levels", levelId));
+    } catch (error) {
+        console.error("Error deleting saved level", error);
         throw error;
     }
 };

@@ -2,8 +2,8 @@ import { Game } from "phaser";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { LevelEditor } from "./scenes/LevelEditor/LevelEditor";
 import { PlayGame } from "@/game/scenes/GameScreen/PlayGame";
-import { LevelData } from "../lib/types";
 import { TestGame } from "./scenes/GameScreen/TestGame";
+import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
 
 export interface IRefPhaserGame {
     game: Game | null;
@@ -11,12 +11,10 @@ export interface IRefPhaserGame {
 
 interface PhaserGameProps {
     scene: "create" | "play";
-    levelData?: LevelData;
-    levelId?: string;
 }
 
 export const PhaserGame = forwardRef<IRefPhaserGame, PhaserGameProps>(
-    ({ levelData, levelId }, ref) => {
+    ({ scene }, ref) => {
         const gameRef = useRef<Game | null>(null);
         const containerRef = useRef<HTMLDivElement>(null);
         const initializedRef = useRef(false);
@@ -27,6 +25,16 @@ export const PhaserGame = forwardRef<IRefPhaserGame, PhaserGameProps>(
 
         useEffect(() => {
             if (!containerRef.current) return;
+
+            if (gameRef.current) {
+                try {
+                    gameRef.current.destroy(true);
+                } catch (e) {
+                    console.warn("Error cleaning up previous game instance", e);
+                }
+                gameRef.current = null;
+                useLevelEditorStore.getState().setGame(null);
+            }
 
             const config: Phaser.Types.Core.GameConfig = {
                 type: Phaser.AUTO,
@@ -48,12 +56,15 @@ export const PhaserGame = forwardRef<IRefPhaserGame, PhaserGameProps>(
             };
 
             gameRef.current = new Game(config);
+            useLevelEditorStore.getState().setGame(gameRef.current);
 
-            if (levelData) {
-                gameRef.current.scene.start("LevelEditor", {
-                    levelData,
-                    id: levelId,
-                });
+            if (scene === "create" && !initializedRef.current) {
+                gameRef.current.scene.start("LevelEditor");
+                initializedRef.current = true;
+            }
+
+            if (scene === "play" && !initializedRef.current) {
+                gameRef.current.scene.start("PlayGame");
                 initializedRef.current = true;
             }
 
@@ -61,33 +72,9 @@ export const PhaserGame = forwardRef<IRefPhaserGame, PhaserGameProps>(
                 gameRef.current?.destroy(true);
                 gameRef.current = null;
                 initializedRef.current = false;
+                useLevelEditorStore.getState().setGame(null);
             };
         }, []);
-
-        // useEffect(() => {
-        //     if (gameRef.current && levelData && initializedRef.current) {
-        //         if (gameRef.current.scene.isActive("LevelEditor")) {
-        //             gameRef.current.scene.start("LevelEditor", {
-        //                 levelData,
-        //                 id: levelId,
-        //             });
-        //         } else {
-        //             gameRef.current.scene.start("LevelEditor", {
-        //                 levelData,
-        //                 id: levelId,
-        //             });
-        //         }
-        //     }
-        // }, [levelData, levelId]);
-
-        useEffect(() => {
-            if (gameRef.current && levelData) {
-                gameRef.current.scene.start("LevelEditor", {
-                    levelData,
-                    id: levelId,
-                });
-            }
-        }, [levelData, levelId]);
 
         return <div ref={containerRef} className="w-full h-full" />;
     },

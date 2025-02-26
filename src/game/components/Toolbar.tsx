@@ -1,54 +1,28 @@
-import { Pointer, Trash } from "lucide-react";
+import { Trash } from "lucide-react";
 import { EventBus } from "../EventBus";
-import { useEffect, useState } from "react";
-import { LevelThemes } from "../../lib/types";
+// import { LevelThemes } from "../../lib/types";
 import { gameBackgrounds, gameThemes } from "../../lib/gameThemes";
+import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
 
 export const Toolbar = () => {
-    const [currentTheme, setCurrentTheme] = useState<LevelThemes>("standard");
-    const [currentBackground, setCurrentBackground] = useState<string>("");
-    const [isTestMode, setIsTestMode] = useState(false);
+    const {
+        setSelectedTool,
+        // setLevelTheme,
+        setBackgroundId,
+        levelData,
+        testLevel,
+    } = useLevelEditorStore();
 
-    useEffect(() => {
-        const handleTestMode = () => {
-            setIsTestMode(true);
-        };
-
-        const handleEditorMode = () => {
-            setIsTestMode(false);
-        };
-
-        EventBus.on("testModeReady", handleTestMode);
-        EventBus.on("editorMode", handleEditorMode);
-
-        return () => {
-            EventBus.off("testModeReady", handleTestMode);
-            EventBus.off("editorMode", handleEditorMode);
-        };
-    }, []);
-
-    if (isTestMode) return null;
-
-    const themeConfig = gameThemes[currentTheme];
-
-    const handleBackgroundChange = (backgroundId: string) => {
-        setCurrentBackground(backgroundId);
-        EventBus.emit("backgroundChanged", backgroundId);
-    };
-
-    const handleThemeChange = (theme: LevelThemes) => {
-        setCurrentTheme(theme);
-        EventBus.emit("themeChanged", theme);
-    };
+    const themeConfig = gameThemes[levelData.theme];
 
     return (
         <div className="flex flex-col gap-2 bg-slate-500 p-2 rounded-lg shadow-lg items-start">
-            <div>
+            {/* <div>
                 <p className="text-white font-bold">Theme</p>
                 <select
-                    value={currentTheme}
+                    value={levelData.theme}
                     onChange={(e) =>
-                        handleThemeChange(e.target.value as LevelThemes)
+                        setLevelTheme(e.target.value as LevelThemes)
                     }
                 >
                     {Object.keys(gameThemes).map((theme) => (
@@ -57,7 +31,7 @@ export const Toolbar = () => {
                         </option>
                     ))}
                 </select>
-            </div>
+            </div> */}
 
             <div>
                 <p className="text-white font-bold">Blocks</p>
@@ -66,13 +40,11 @@ export const Toolbar = () => {
                         <button
                             key={block.id}
                             className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs"
-                            onClick={() =>
-                                EventBus.emit("toolSelected", block.id)
-                            }
+                            onClick={() => setSelectedTool(block.id)}
                             title={block.displayName}
                         >
                             <img
-                                src={`/assets/theme_${currentTheme}/${block.asset}`}
+                                src={`/assets/theme_${levelData.theme}/${block.asset}`}
                                 alt={block.displayName}
                                 className="w-8 h-8"
                             />
@@ -89,13 +61,11 @@ export const Toolbar = () => {
                             <button
                                 key={enemy.id}
                                 className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs"
-                                onClick={() =>
-                                    EventBus.emit("toolSelected", enemy.id)
-                                }
+                                onClick={() => setSelectedTool(enemy.id)}
                                 title={enemy.displayName}
                             >
                                 <img
-                                    src={`/assets/theme_${currentTheme}/${enemy.asset}`}
+                                    src={`/assets/theme_${levelData.theme}/${enemy.asset}`}
                                     alt={enemy.displayName}
                                     className="w-8 h-8"
                                 />
@@ -111,7 +81,7 @@ export const Toolbar = () => {
                     <button
                         className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs"
                         onClick={() => {
-                            EventBus.emit("toolSelected", "start");
+                            setSelectedTool("start");
                         }}
                     >
                         START
@@ -119,7 +89,7 @@ export const Toolbar = () => {
                     <button
                         className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs"
                         onClick={() => {
-                            EventBus.emit("toolSelected", "end");
+                            setSelectedTool("end");
                         }}
                     >
                         FINISH
@@ -129,24 +99,17 @@ export const Toolbar = () => {
 
             <button
                 className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                onClick={() => EventBus.emit("toolSelected", "delete")}
+                onClick={() => setSelectedTool("delete")}
             >
                 <Trash />
             </button>
 
             {/* <button
                 className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                onClick={() => EventBus.emit("rotate")}
-            >
-                <RotateCw />
-            </button> */}
-
-            <button
-                className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                onClick={() => EventBus.emit("toolSelected", "select")}
+                onClick={() => setSelectedTool("select")}
             >
                 <Pointer />
-            </button>
+            </button> */}
 
             <div>
                 <p className="text-white font-bold">Backgrounds</p>
@@ -155,13 +118,11 @@ export const Toolbar = () => {
                         <button
                             key={background.id}
                             className={`w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs ${
-                                currentBackground === background.id
+                                levelData.backgroundId === background.id
                                     ? "ring-2 ring-yellow-500"
                                     : ""
                             }`}
-                            onClick={() =>
-                                handleBackgroundChange(background.id)
-                            }
+                            onClick={() => setBackgroundId(background.id)}
                             title={`Background ${background.id}`}
                         >
                             {index + 1}
@@ -175,7 +136,7 @@ export const Toolbar = () => {
                 <button
                     className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs"
                     onClick={() => {
-                        EventBus.emit("testLevel");
+                        testLevel();
                     }}
                 >
                     TEST
@@ -183,7 +144,7 @@ export const Toolbar = () => {
                 <button
                     className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white text-xs"
                     onClick={() => {
-                        EventBus.emit("saveLevel");
+                        EventBus.emit("requestSave");
                     }}
                 >
                     SAVE

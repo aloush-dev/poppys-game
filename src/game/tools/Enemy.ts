@@ -1,6 +1,6 @@
+import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
 import { gameThemes } from "../../lib/gameThemes";
 import { EnemyConfig } from "../../lib/types";
-import { LevelEditor } from "../scenes/LevelEditor";
 
 export class Enemy extends Phaser.GameObjects.Image {
     public enemyId: string;
@@ -49,15 +49,20 @@ export class Enemy extends Phaser.GameObjects.Image {
                 dragX: number,
                 dragY: number,
             ) => {
-                if (
-                    gameObject === this &&
-                    (scene as LevelEditor).selectedTool === "select"
-                ) {
-                    const snappedX = Math.floor(dragX / 32) * 32;
-                    const snappedY = Math.floor(dragY / 32) * 32;
-                    this.setPosition(snappedX, snappedY);
-                    this.body.position.set(snappedX, snappedY);
-                    this.body.updateFromGameObject();
+                if (gameObject === this) {
+                    const store = useLevelEditorStore.getState();
+                    if (store.selectedTool === "select") {
+                        const snappedX = Math.floor(dragX / 32) * 32;
+                        const snappedY = Math.floor(dragY / 32) * 32;
+
+                        this.setPosition(snappedX, snappedY);
+                        if (this.body) {
+                            this.body.position.set(snappedX, snappedY);
+                            this.body.updateFromGameObject();
+                        }
+
+                        store.updateBlock(snappedX, snappedY, this.enemyId);
+                    }
                 }
             },
         );
