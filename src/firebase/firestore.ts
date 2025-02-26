@@ -10,7 +10,7 @@ import {
     setDoc,
     where,
 } from "firebase/firestore";
-import { LevelData, SavedLevel } from "../lib/types";
+import { LevelData, PublishedLevel, SavedLevel } from "../lib/types";
 import { db } from "./config";
 import { DBUser } from "../lib/dbTypes";
 
@@ -56,7 +56,10 @@ export const SaveLevelToDb = async (levelData: LevelData, levelId?: string) => {
     }
 };
 
-export const publishLevelToDb = async (levelData: LevelData, levelId?: string) => {
+export const publishLevelToDb = async (
+    levelData: LevelData,
+    levelId?: string,
+) => {
     try {
         let docRef;
 
@@ -157,12 +160,14 @@ export const getLevelById = async (levelId: string) => {
 
 export const getAllLevels = async () => {
     try {
-        const levels = await getDocs(collection(db, "levels"));
+        const levels = await getDocs(
+            query(collection(db, "levels"), where("published", "==", true)),
+        );
 
         return levels.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
-        })) as SavedLevel[];
+        })) as PublishedLevel[];
     } catch (error) {
         console.error("Error getting all levels", error);
         throw error;

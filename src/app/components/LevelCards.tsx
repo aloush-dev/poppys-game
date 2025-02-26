@@ -11,12 +11,16 @@ export const LevelCard = ({ level }: { level: SavedLevel }) => {
                 <div className="flex justify-between items-center">
                     <h3 className="font-bold text-lg mb-2">{level.name}</h3>
                     <button className="transition-all hover:scale-up-center relative hover:ring-4 hover:ring-offset-2 rounded-full hover:ring-green-600">
-                        <div className="w-full h-full flex flex-col justify-center peer ">
+                        <Link
+                            to="/play"
+                            search={{ levelId: level.id }}
+                            className="w-full h-full flex flex-col justify-center peer "
+                        >
                             <PlayCircleIcon
                                 className="text-green-500"
                                 size={38}
                             />
-                        </div>
+                        </Link>
                     </button>
                 </div>
                 <p className="text-gray-600 mb-2">by {level.creator}</p>

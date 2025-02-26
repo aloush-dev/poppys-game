@@ -17,6 +17,17 @@ export interface SavedLevel extends LevelData {
     plays: number;
     completes: number;
     likes: number;
+    published: boolean;
+}
+
+export interface PublishedLevel extends SavedLevel {
+    name: string;
+    description: string;
+    creator: string;
+    blocks?: BlockData[];
+    enemies?: EnemyData[];
+    startPoint: PointData;
+    endPoint: PointData;
 }
 
 export type LevelThemes = "candy" | "standard";
