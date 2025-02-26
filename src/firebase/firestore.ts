@@ -76,6 +76,9 @@ export const publishLevelToDb = async (
                 {
                     ...levelData,
                     published: true,
+                    plays: 0,
+                    completes: 0,
+                    likes: 0,
                     updatedAt: serverTimestamp(),
                 },
                 { merge: true },
@@ -86,6 +89,9 @@ export const publishLevelToDb = async (
             await setDoc(docRef, {
                 ...levelData,
                 published: true,
+                plays: 0,
+                completes: 0,
+                likes: 0,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });
@@ -95,7 +101,7 @@ export const publishLevelToDb = async (
         return {
             id: docRef.id,
             ...updatedDoc.data(),
-        } as SavedLevel;
+        } as PublishedLevel;
     } catch (error) {
         console.error("Error saving level", error);
         throw error;
@@ -160,14 +166,38 @@ export const getLevelById = async (levelId: string) => {
 
 export const getAllLevels = async () => {
     try {
+        // Get all published levels
         const levels = await getDocs(
             query(collection(db, "levels"), where("published", "==", true)),
         );
 
-        return levels.docs.map((doc) => ({
+        const levelData = levels.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
         })) as PublishedLevel[];
+
+        // Get all unique creator IDs
+        const creatorIds = [
+            ...new Set(levelData.map((level) => level.creator)),
+        ];
+
+        // Get all users in one query
+        const usersSnapshot = await getDocs(
+            query(collection(db, "users"), where("userId", "in", creatorIds)),
+        );
+
+        // Create a map of userId to username
+        const userMap = new Map();
+        usersSnapshot.docs.forEach((doc) => {
+            const userData = doc.data();
+            userMap.set(userData.userId, userData.username);
+        });
+
+        // Add username to each level
+        return levelData.map((level) => ({
+            ...level,
+            creator: userMap.get(level.creator) || "Unknown User",
+        }));
     } catch (error) {
         console.error("Error getting all levels", error);
         throw error;
@@ -233,6 +263,72 @@ export const deleteSavedLevel = async (levelId: string) => {
         await deleteDoc(doc(db, "levels", levelId));
     } catch (error) {
         console.error("Error deleting saved level", error);
+        throw error;
+    }
+};
+
+export const likeLevel = async (levelId: string) => {
+    try {
+        const levelDoc = doc(db, "levels", levelId);
+        const level = await getDoc(levelDoc);
+
+        if (!level.exists()) {
+            throw new Error("Level does not exist");
+        }
+
+        await setDoc(
+            levelDoc,
+            {
+                likes: level.data().likes + 1,
+            },
+            { merge: true },
+        );
+    } catch (error) {
+        console.error("Error liking level", error);
+        throw error;
+    }
+};
+
+export const playLevel = async (levelId: string) => {
+    try {
+        const levelDoc = doc(db, "levels", levelId);
+        const level = await getDoc(levelDoc);
+
+        if (!level.exists()) {
+            throw new Error("Level does not exist");
+        }
+
+        await setDoc(
+            levelDoc,
+            {
+                plays: level.data().plays + 1,
+            },
+            { merge: true },
+        );
+    } catch (error) {
+        console.error("Error playing level", error);
+        throw error;
+    }
+};
+
+export const completeLevel = async (levelId: string) => {
+    try {
+        const levelDoc = doc(db, "levels", levelId);
+        const level = await getDoc(levelDoc);
+
+        if (!level.exists()) {
+            throw new Error("Level does not exist");
+        }
+
+        await setDoc(
+            levelDoc,
+            {
+                completes: level.data().completes + 1,
+            },
+            { merge: true },
+        );
+    } catch (error) {
+        console.error("Error completing level", error);
         throw error;
     }
 };

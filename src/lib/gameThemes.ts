@@ -24,6 +24,10 @@ export const gameThemes: Record<string, ThemeConfig> = {
                 asset: "enemy_spikes.png",
                 displayName: "Enemy Spikes",
                 baseId: "enemy_static",
+                hitbox: {
+                    height: 80,
+                    width: 80,
+                },
             },
         ],
         startPoint: "start_point.png",

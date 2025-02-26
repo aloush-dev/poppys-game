@@ -29,7 +29,17 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.setOrigin(0, 0);
         this.setScale(scale);
 
-        this.body.setSize(10, 10);
+        const hitboxWidth = enemyConfig.hitbox?.width;
+        const hitboxHeight = enemyConfig.hitbox?.height;
+
+        if (hitboxHeight && hitboxWidth) {
+            const offsetX = (32 - hitboxWidth) / 2;
+            const offsetY = (32 - hitboxHeight) / 2;
+
+            this.body.setSize(hitboxWidth, hitboxHeight);
+            this.body.setOffset(offsetX, offsetY);
+        }
+
         this.body.position.set(x, y);
         this.body.updateFromGameObject();
 

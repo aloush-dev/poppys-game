@@ -63,6 +63,10 @@ export interface EnemyConfig {
     asset: string;
     displayName: string;
     baseId: string;
+    hitbox?: {
+        height: number;
+        width: number;
+    };
 }
 
 export interface EnemyData {
@@ -70,6 +74,10 @@ export interface EnemyData {
     y: number;
     enemyId: string;
     baseId: string;
+    hitbox?: {
+        height: number;
+        width: number;
+    };
 }
 
 export interface BlockData {
