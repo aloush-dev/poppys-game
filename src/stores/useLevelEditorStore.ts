@@ -61,7 +61,6 @@ export const useLevelEditorStore = create<LevelEditorState>()((set, get) => ({
 
     setLevelTheme: (theme) =>
         set((state) => ({
-            levelTheme: theme,
             levelData: { ...state.levelData, theme },
         })),
 
@@ -204,7 +203,7 @@ export const useLevelEditorStore = create<LevelEditorState>()((set, get) => ({
 
         if (game) {
             game.scene.stop("LevelEditor");
-            game.scene.start("TestGame", { levelData });
+            game.scene.start("TestGame");
         }
     },
 

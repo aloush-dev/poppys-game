@@ -5,6 +5,7 @@ import { EndPoint, StartPoint } from "@/game/tools/Points";
 import { gameBackgrounds, gameThemes } from "@/lib/gameThemes";
 import { BlockData, EnemyData, LevelData } from "@/lib/types";
 import { loadThemeAssets } from "../SceneSetup";
+import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
 
 export class TestGame extends Scene {
     public blocks: { [key: string]: Block } = {};
@@ -24,8 +25,9 @@ export class TestGame extends Scene {
         super({ key: "TestGame" });
     }
 
-    init(data: { levelData: LevelData }) {
-        this.levelData = data.levelData;
+    init() {
+        const { levelData } = useLevelEditorStore.getState();
+        this.levelData = levelData;
     }
 
     preload() {
@@ -89,11 +91,22 @@ export class TestGame extends Scene {
 
     private createBlocks() {
         const blocks = this.levelData.blocks || [];
+        const theme = this.levelData.theme;
 
         blocks.forEach((blockData: BlockData) => {
             const key = `${blockData.x}-${blockData.y}`;
-            const theme = this.levelData.theme;
-            const blockConfig = this.getBlockConfig(blockData.blockId, theme);
+
+            let blockConfig;
+
+            if (blockData.baseId) {
+                blockConfig = gameThemes[theme].blocks.find(
+                    (b) => b.baseId === blockData.baseId,
+                );
+            }
+
+            if (!blockConfig) {
+                blockConfig = this.getBlockConfig(blockData.blockId, theme);
+            }
 
             if (blockConfig) {
                 this.blocks[key] = new Block(
@@ -103,17 +116,32 @@ export class TestGame extends Scene {
                     theme,
                     blockConfig,
                 );
+            } else {
+                console.warn(
+                    `No matching block found for ${blockData.baseId || blockData.blockId} in theme ${theme}`,
+                );
             }
         });
     }
 
     private createEnemies() {
         const enemies = this.levelData.enemies || [];
+        const theme = this.levelData.theme;
 
         enemies.forEach((enemyData: EnemyData) => {
             const key = `${enemyData.x}-${enemyData.y}`;
-            const theme = this.levelData.theme;
-            const enemyConfig = this.getEnemyConfig(enemyData.enemyId, theme);
+
+            let enemyConfig;
+
+            if (enemyData.baseId) {
+                enemyConfig = gameThemes[theme].enemies?.find(
+                    (e) => e.baseId === enemyData.baseId,
+                );
+            }
+
+            if (!enemyConfig) {
+                enemyConfig = this.getEnemyConfig(enemyData.enemyId, theme);
+            }
 
             if (enemyConfig) {
                 this.enemies[key] = new Enemy(
@@ -122,6 +150,10 @@ export class TestGame extends Scene {
                     enemyData.y,
                     theme,
                     enemyConfig,
+                );
+            } else {
+                console.warn(
+                    `No matching enemy found for ${enemyData.baseId || enemyData.enemyId} in theme ${theme}`,
                 );
             }
         });
@@ -309,15 +341,25 @@ export class TestGame extends Scene {
     }
 
     private getBlockConfig(blockId: string, theme: string) {
-        return gameThemes[theme].blocks.find(
-            (b) => b.id === blockId || b.baseId === blockId,
-        );
+        let block = gameThemes[theme].blocks.find((b) => b.id === blockId);
+
+        if (!block) {
+            block = gameThemes[theme].blocks.find((b) => b.baseId === blockId);
+        }
+
+        return block;
     }
 
     private getEnemyConfig(enemyId: string, theme: string) {
-        return gameThemes[theme].enemies?.find(
-            (e) => e.id === enemyId || e.baseId === enemyId,
-        );
+        let enemy = gameThemes[theme].enemies?.find((e) => e.id === enemyId);
+
+        if (!enemy) {
+            enemy = gameThemes[theme].enemies?.find(
+                (e) => e.baseId === enemyId,
+            );
+        }
+
+        return enemy;
     }
 
     shutdown() {

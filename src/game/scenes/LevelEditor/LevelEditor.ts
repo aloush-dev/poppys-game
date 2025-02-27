@@ -6,7 +6,7 @@ import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
 import { gameThemes, gameBackgrounds } from "@/lib/gameThemes";
 import { GridUtils } from "./gridUtils";
 import { PointerHandler } from "./PointerHandler";
-import { BlockData, EnemyData, PointData } from "@/lib/types";
+import { BlockData, EnemyData, LevelThemes, PointData } from "@/lib/types";
 import { loadThemeAssets } from "../SceneSetup";
 
 export class LevelEditor extends Scene {
@@ -71,6 +71,8 @@ export class LevelEditor extends Scene {
         this.unsubscribeStore.forEach((unsubscribe) => unsubscribe());
         this.unsubscribeStore = [];
 
+        let prevTheme = this.getStore().levelData.theme;
+
         this.unsubscribeStore.push(
             useLevelEditorStore.subscribe((state) => {
                 if (!state.levelData) return;
@@ -84,6 +86,12 @@ export class LevelEditor extends Scene {
                 }
 
                 try {
+                    if (state.levelData.theme !== prevTheme) {
+                        prevTheme = state.levelData.theme;
+
+                        this.loadNewThemeAssets(state.levelData.theme);
+                    }
+
                     this.syncBlocks(state.levelData.blocks || []);
                     this.syncEnemies(state.levelData.enemies || []);
                     this.syncStartPoint(state.levelData.startPoint ?? null);
@@ -147,35 +155,39 @@ export class LevelEditor extends Scene {
 
     private syncBlocks(blocks: BlockData[]) {
         const currentBlockKeys: { [key: string]: boolean } = {};
+        const currentTheme = this.getStore().levelData.theme;
 
         blocks.forEach((blockData: BlockData) => {
             const key = `${blockData.x}-${blockData.y}`;
             currentBlockKeys[key] = true;
-
             const existingBlock = this.blocks[key];
-            if (!existingBlock) {
-                const blockConfig = this.getBlockConfig(blockData.blockId);
-                if (blockConfig) {
-                    this.blocks[key] = new Block(
-                        this,
-                        blockData.x,
-                        blockData.y,
-                        this.getStore().levelData.theme,
-                        blockConfig,
-                    );
-                }
-            } else if (existingBlock.blockId !== blockData.blockId) {
-                existingBlock.destroy();
-                const blockConfig = this.getBlockConfig(blockData.blockId);
-                if (blockConfig) {
-                    this.blocks[key] = new Block(
-                        this,
-                        blockData.x,
-                        blockData.y,
-                        this.getStore().levelData.theme,
-                        blockConfig,
-                    );
-                }
+
+            const blockConfig = blockData.baseId
+                ? gameThemes[currentTheme].blocks.find(
+                      (b) => b.baseId === blockData.baseId,
+                  )
+                : this.getBlockConfig(blockData.blockId);
+
+            if (!blockConfig) {
+                return;
+            }
+
+            if (
+                !existingBlock ||
+                existingBlock.blockId !== blockConfig.id ||
+                existingBlock.getData("theme") !== currentTheme
+            ) {
+                if (existingBlock) existingBlock.destroy();
+
+                this.blocks[key] = new Block(
+                    this,
+                    blockData.x,
+                    blockData.y,
+                    currentTheme,
+                    blockConfig,
+                );
+
+                this.blocks[key].setData("theme", currentTheme);
             }
         });
 
@@ -189,34 +201,39 @@ export class LevelEditor extends Scene {
 
     private syncEnemies(enemies: EnemyData[]) {
         const currentEnemyKeys: { [key: string]: boolean } = {};
+        const currentTheme = this.getStore().levelData.theme;
 
         enemies.forEach((enemyData) => {
             const key = `${enemyData.x}-${enemyData.y}`;
             currentEnemyKeys[key] = true;
+            const existingEnemy = this.enemies[key];
 
-            if (!this.enemies[key]) {
-                const enemyConfig = this.getEnemyConfig(enemyData.baseId);
-                if (enemyConfig) {
-                    this.enemies[key] = new Enemy(
-                        this,
-                        enemyData.x,
-                        enemyData.y,
-                        this.getStore().levelData.theme,
-                        enemyConfig,
-                    );
-                }
-            } else if (this.enemies[key].enemyId !== enemyData.enemyId) {
-                this.enemies[key].destroy();
-                const enemyConfig = this.getEnemyConfig(enemyData.baseId);
-                if (enemyConfig) {
-                    this.enemies[key] = new Enemy(
-                        this,
-                        enemyData.x,
-                        enemyData.y,
-                        this.getStore().levelData.theme,
-                        enemyConfig,
-                    );
-                }
+            const enemyConfig = enemyData.baseId
+                ? gameThemes[currentTheme].enemies?.find(
+                      (e) => e.baseId === enemyData.baseId,
+                  )
+                : this.getEnemyConfig(enemyData.enemyId);
+
+            if (!enemyConfig) {
+                return;
+            }
+
+            if (
+                !existingEnemy ||
+                existingEnemy.enemyId !== enemyConfig.id ||
+                existingEnemy.getData("theme") !== currentTheme
+            ) {
+                if (existingEnemy) existingEnemy.destroy();
+
+                this.enemies[key] = new Enemy(
+                    this,
+                    enemyData.x,
+                    enemyData.y,
+                    currentTheme,
+                    enemyConfig,
+                );
+
+                this.enemies[key].setData("theme", currentTheme);
             }
         });
 
@@ -274,6 +291,21 @@ export class LevelEditor extends Scene {
             this.currentBackground.setDepth(-10);
             this.currentBackground.setData("backgroundId", backgroundId);
         }
+    }
+
+    private loadNewThemeAssets(newTheme: string) {
+        const tempLevelData = {
+            ...this.getStore().levelData,
+            theme: newTheme as LevelThemes,
+        };
+
+        loadThemeAssets(this, tempLevelData);
+
+        this.load.once("complete", () => {
+            this.renderFromStore();
+        });
+
+        this.load.start();
     }
 
     private getBlockConfig(blockId: string) {

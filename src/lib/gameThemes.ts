@@ -61,6 +61,34 @@ export const gameThemes: Record<string, ThemeConfig> = {
         startPoint: "start_point.png",
         endPoint: "end_point.png",
     },
+    scribble: {
+        name: "scribble",
+        blockSize: 64,
+        blocks: [
+            {
+                id: "scribble_grass_block",
+                asset: "tile_grass.png",
+                displayName: "Scribble Grass Block",
+                baseId: "block_1",
+            },
+            {
+                id: "scribble_block",
+                asset: "tile_block.png",
+                displayName: "Scribble Block",
+                baseId: "block_2",
+            },
+        ],
+        enemies: [
+            {
+                id: "spikes",
+                asset: "tile_spikes.png",
+                displayName: "Scribble Spikes",
+                baseId: "enemy_static",
+            },
+        ],
+        startPoint: "start_point.png",
+        endPoint: "end_point.png",
+    },
 };
 
 export const gameBackgrounds: BackgroundData[] = [

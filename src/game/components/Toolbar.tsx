@@ -1,12 +1,12 @@
 import { Trash } from "lucide-react";
-// import { LevelThemes } from "../../lib/types";
+import { LevelThemes } from "../../lib/types";
 import { gameBackgrounds, gameThemes } from "../../lib/gameThemes";
 import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
 
 export const Toolbar = () => {
     const {
         setSelectedTool,
-        // setLevelTheme,
+        setLevelTheme,
         setBackgroundId,
         levelData,
         testLevel,
@@ -18,7 +18,7 @@ export const Toolbar = () => {
 
     return (
         <div className="flex flex-col gap-2 bg-slate-500 p-2 rounded-lg shadow-lg items-start">
-            {/* <div>
+            <div>
                 <p className="text-white font-bold">Theme</p>
                 <select
                     value={levelData.theme}
@@ -32,7 +32,7 @@ export const Toolbar = () => {
                         </option>
                     ))}
                 </select>
-            </div> */}
+            </div>
 
             <div>
                 <p className="text-white font-bold">Blocks</p>
