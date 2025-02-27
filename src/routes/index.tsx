@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { ReactNode, useState } from "react";
 import LoginSignupForm from "../app/components/LoginSignUpForm";
-import { BadgePlus, Play, Trophy } from "lucide-react";
+import { BadgePlus, Play } from "lucide-react";
+import { HomepageHero } from "@/app/components/HomepageHero";
 
 export const Route = createFileRoute("/")({
     component: Index,
@@ -12,37 +13,13 @@ function Index() {
 
     return (
         <div className="min-h-noheader-screen bg-gray-100">
-            <div className="bg-blue-600 text-white">
-                <div className="container mx-auto px-4 py-16 text-center">
-                    <h1 className="text-4xl md:text-6xl font-bold mb-4">
-                        Poppy's World
-                    </h1>
-                    <p className="text-xl md:text-2xl mb-8">
-                        Create, Play, and Rate Platformer Levels!
-                    </p>
-                    <div className="space-x-4">
-                        <Link
-                            to="/create"
-                            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-                        >
-                            Create a Level
-                        </Link>
-                        <Link
-                            to="/explore"
-                            className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded"
-                        >
-                            Play Levels
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
+            <HomepageHero />
             <section className="py-16">
                 <div className="container mx-auto px-4">
                     <h2 className="text-3xl font-bold text-center mb-8">
                         Game Features
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 ">
                         <FeatureCard
                             title="Create Levels"
                             icon={
@@ -60,13 +37,13 @@ function Index() {
                             }
                             description="Play levels created by other users. Rate them and leave feedback!"
                         />
-                        <FeatureCard
+                        {/* <FeatureCard
                             title="Leaderboards"
                             icon={
                                 <Trophy className="text-yellow-500" size={48} />
                             }
                             description="Compete with other players for the fastest time on each level."
-                        />
+                        /> */}
                     </div>
                 </div>
             </section>
