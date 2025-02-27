@@ -1,12 +1,10 @@
 import type React from "react";
 import { type FormEvent, useState } from "react";
-import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-} from "firebase/auth";
 import { auth } from "../../firebase/config";
 import { createDBUser } from "../../firebase/firestore";
 import { useNavigate } from "@tanstack/react-router";
+
+import { useAuthStore } from "@/stores/useAuthStore";
 
 interface LoginSignupFormProps {
     onClose?: () => void;
@@ -21,7 +19,7 @@ const LoginSignupForm: React.FC<LoginSignupFormProps> = ({ onClose }) => {
     const [error, setError] = useState<string | null>(null);
 
     const navigate = useNavigate();
-
+    const { signIn, signUp } = useAuthStore();
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
@@ -33,18 +31,14 @@ const LoginSignupForm: React.FC<LoginSignupFormProps> = ({ onClose }) => {
 
         try {
             if (isLogin) {
-                await signInWithEmailAndPassword(auth, email, password);
+                await signIn(email, password);
 
                 navigate({ to: "/" });
             } else {
-                await createUserWithEmailAndPassword(
-                    auth,
-                    email,
-                    password,
-                ).then(async (data) => {
+                await signUp(email, password).then(async (data) => {
                     if (auth.currentUser) {
                         try {
-                            await createDBUser(data.user.uid, username);
+                            await createDBUser(data.uid, username);
                         } catch (error) {
                             console.error("Error creating user", error);
                             setError("Error creating user, please try again");

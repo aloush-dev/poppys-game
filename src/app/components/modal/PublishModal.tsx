@@ -1,5 +1,6 @@
 import { publishLevelToDb } from "@/firebase/firestore";
-import { useAuth } from "@/lib/useAuth";
+import { useAuthStore } from "@/stores/useAuthStore";
+
 import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
 import { useModalStore } from "@/stores/useModalStore";
 import { useNavigate } from "@tanstack/react-router";
@@ -15,7 +16,7 @@ export const PublishModal = ({
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const { levelData, setLevelData, resetLevel } = useLevelEditorStore();
-    const { user } = useAuth();
+    const { user } = useAuthStore();
     const { closeModal } = useModalStore();
     const navigate = useNavigate();
 

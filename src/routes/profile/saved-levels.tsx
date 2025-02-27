@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useAuth } from "../../lib/useAuth";
+import { useAuthStore } from "@/stores/useAuthStore";
+
 import { getSavedLevelsByUserId } from "../../firebase/firestore";
 import { useEffect, useState } from "react";
 import { SavedLevel } from "../../lib/types";
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/profile/saved-levels")({
 });
 
 function RouteComponent() {
-    const { user } = useAuth();
+    const { user } = useAuthStore();
     const [levels, setLevels] = useState<SavedLevel[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

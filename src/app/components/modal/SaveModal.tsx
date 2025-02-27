@@ -1,5 +1,6 @@
 import { SaveLevelToDb } from "@/firebase/firestore";
-import { useAuth } from "@/lib/useAuth";
+import { useAuthStore } from "@/stores/useAuthStore";
+
 import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
 import { useModalStore } from "@/stores/useModalStore";
 import { useState } from "react";
@@ -9,7 +10,7 @@ export const SaveModal = ({ title = "Save Level" }: { title?: string }) => {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const { levelData, setLevelData } = useLevelEditorStore();
-    const { user } = useAuth();
+    const { user } = useAuthStore();
     const { closeModal } = useModalStore();
 
     const handleSubmit = async () => {

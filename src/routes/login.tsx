@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import LoginSignupForm from "../app/components/LoginSignUpForm";
-import { useAuth } from "../lib/useAuth";
+import { useAuthStore } from "@/stores/useAuthStore";
+
 
 export const Route = createFileRoute("/login")({
     component: RouteComponent,
@@ -8,7 +9,7 @@ export const Route = createFileRoute("/login")({
 
 function RouteComponent() {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user } = useAuthStore();
 
     if (user) {
         navigate({ to: "/" });

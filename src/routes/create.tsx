@@ -3,7 +3,8 @@ import { useEffect, useRef } from "react";
 import { IRefPhaserGame, PhaserGame } from "../game/PhaserGame";
 import { Toolbar } from "../game/components/Toolbar";
 import { getLevelById } from "../firebase/firestore";
-import { useAuth } from "@/lib/useAuth";
+import { useAuthStore } from "@/stores/useAuthStore";
+
 import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
 
 interface SearchParams {
@@ -42,7 +43,7 @@ export const Route = createFileRoute("/create")({
 
 function RouteComponent() {
     const phaserRef = useRef<IRefPhaserGame | null>(null);
-    const { user } = useAuth();
+    const { user } = useAuthStore();
     const { setLevelData } = useLevelEditorStore();
     const { level } = Route.useLoaderData();
 

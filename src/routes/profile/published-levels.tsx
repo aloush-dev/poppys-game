@@ -1,7 +1,8 @@
 import { PublishedLevelCard } from "@/app/components/LevelCards";
 import { getPublishedLevelsByUserId } from "@/firebase/firestore";
 import { SavedLevel } from "@/lib/types";
-import { useAuth } from "@/lib/useAuth";
+import { useAuthStore } from "@/stores/useAuthStore";
+
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
@@ -11,7 +12,7 @@ export const Route = createFileRoute("/profile/published-levels")({
 });
 
 function RouteComponent() {
-    const { user } = useAuth();
+    const { user } = useAuthStore();
     const [levels, setLevels] = useState<SavedLevel[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { useAuth } from "../../lib/useAuth";
 import { useState, useRef, useEffect } from "react";
 import { User, LogOut, BookMarked, Layers } from "lucide-react";
 import { useModalStore } from "@/stores/useModalStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export const Header = () => {
-    const { user, logOut } = useAuth();
+    const { user, logout } = useAuthStore();
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { openModal } = useModalStore();
@@ -121,7 +121,7 @@ export const Header = () => {
                                                     setProfileDropdownOpen(
                                                         false,
                                                     );
-                                                    logOut();
+                                                    logout();
                                                 }}
                                                 className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors text-red-600"
                                             >
