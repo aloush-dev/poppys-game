@@ -71,7 +71,6 @@ export const useLevelEditorStore = create<LevelEditorState>()((set, get) => ({
 
     addBlock: (block: BlockData) =>
         set((state) => {
-            console.log("Adding block to store:", block);
             const filteredBlocks = (state.levelData.blocks || []).filter(
                 (b) => !(b.x === block.x && b.y === block.y),
             );
@@ -93,7 +92,6 @@ export const useLevelEditorStore = create<LevelEditorState>()((set, get) => ({
 
     updateBlock: (x: number, y: number, blockId: string) =>
         set((state) => {
-            console.log("Updating block in store:", { x, y, blockId });
             const blocks = [...(state.levelData.blocks || [])];
             const index = blocks.findIndex((b) => b.x === x && b.y === y);
 

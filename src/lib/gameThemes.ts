@@ -6,16 +6,22 @@ export const gameThemes: Record<string, ThemeConfig> = {
         blockSize: 64,
         blocks: [
             {
+                id: "standard_block_with_top",
+                asset: "block_grass.png",
+                displayName: "Grass Block",
+                baseId: "block_1",
+            },
+            {
                 id: "block_orange",
                 asset: "block_orange.png",
                 displayName: "Orange Block",
                 baseId: "block_2",
             },
             {
-                id: "standard_block_with_top",
-                asset: "block_grass.png",
-                displayName: "Grass Block",
-                baseId: "block_1",
+                id: "block_stone",
+                asset: "block_stone.png",
+                displayName: "Stone Block",
+                baseId: "block_3",
             },
         ],
         enemies: [
@@ -49,6 +55,12 @@ export const gameThemes: Record<string, ThemeConfig> = {
                 displayName: "Chocolate Mid",
                 baseId: "block_2",
             },
+            {
+                id: "candy_cake_blank",
+                asset: "block_cake_blank.png",
+                displayName: "Cake Blank",
+                baseId: "block_3",
+            },
         ],
         enemies: [
             {
@@ -76,6 +88,12 @@ export const gameThemes: Record<string, ThemeConfig> = {
                 asset: "tile_block.png",
                 displayName: "Scribble Block",
                 baseId: "block_2",
+            },
+            {
+                id: "scribble_stone",
+                asset: "tile_stone.png",
+                displayName: "Scribble Stone",
+                baseId: "block_3",
             },
         ],
         enemies: [

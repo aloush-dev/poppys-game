@@ -166,7 +166,6 @@ export const getLevelById = async (levelId: string) => {
 
 export const getAllLevels = async () => {
     try {
-        // Get all published levels
         const levels = await getDocs(
             query(collection(db, "levels"), where("published", "==", true)),
         );
@@ -176,24 +175,20 @@ export const getAllLevels = async () => {
             ...doc.data(),
         })) as PublishedLevel[];
 
-        // Get all unique creator IDs
         const creatorIds = [
             ...new Set(levelData.map((level) => level.creator)),
         ];
 
-        // Get all users in one query
         const usersSnapshot = await getDocs(
             query(collection(db, "users"), where("userId", "in", creatorIds)),
         );
 
-        // Create a map of userId to username
         const userMap = new Map();
         usersSnapshot.docs.forEach((doc) => {
             const userData = doc.data();
             userMap.set(userData.userId, userData.username);
         });
 
-        // Add username to each level
         return levelData.map((level) => ({
             ...level,
             creator: userMap.get(level.creator) || "Unknown User",

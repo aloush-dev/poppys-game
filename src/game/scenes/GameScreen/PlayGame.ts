@@ -5,7 +5,6 @@ import { EndPoint, StartPoint } from "@/game/tools/Points";
 import { gameBackgrounds, gameThemes } from "@/lib/gameThemes";
 import { BlockData, EnemyData, LevelData } from "@/lib/types";
 import { loadThemeAssets } from "../SceneSetup";
-import { EventBus } from "@/game/EventBus";
 import { usePlayGameStore } from "@/stores/usePlayGameStore";
 
 export class PlayGame extends Scene {
@@ -283,6 +282,7 @@ export class PlayGame extends Scene {
     }
 
     private handleLevelComplete = () => {
+        const { levelCompleted } = usePlayGameStore.getState();
         if (this.levelComplete || !this.player) return;
 
         this.levelComplete = true;
@@ -291,10 +291,10 @@ export class PlayGame extends Scene {
         this.player.setVelocity(0, 0);
         this.player.body!.enable = false;
 
-        EventBus.emit("levelComplete", this.levelData.id);
-
-        this.time.delayedCall(1000, () => {
-            this.scene.start("LevelComplete");
+        this.time.delayedCall(500, () => {
+            this.scene.stop("PlayGame");
+            levelCompleted();
+            // this.scene.start("GameOver");
         });
     };
 

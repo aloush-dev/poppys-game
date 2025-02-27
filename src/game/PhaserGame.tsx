@@ -4,13 +4,15 @@ import { LevelEditor } from "./scenes/LevelEditor/LevelEditor";
 import { PlayGame } from "@/game/scenes/GameScreen/PlayGame";
 import { TestGame } from "./scenes/GameScreen/TestGame";
 import { useLevelEditorStore } from "@/stores/useLevelEditorStore";
+import { GameOver } from "./scenes/GameOver";
+import { GameOverScreen } from "./components/GameOverScreen";
 
 export interface IRefPhaserGame {
     game: Game | null;
 }
 
 interface PhaserGameProps {
-    scene: "create" | "play";
+    scene: "create" | "play" | "test";
 }
 
 export const PhaserGame = forwardRef<IRefPhaserGame, PhaserGameProps>(
@@ -52,7 +54,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, PhaserGameProps>(
                         debug: process.env.NODE_ENV === "development",
                     },
                 },
-                scene: [LevelEditor, PlayGame, TestGame],
+                scene: [LevelEditor, PlayGame, TestGame, GameOver],
             };
 
             gameRef.current = new Game(config);
@@ -76,7 +78,12 @@ export const PhaserGame = forwardRef<IRefPhaserGame, PhaserGameProps>(
             };
         }, []);
 
-        return <div ref={containerRef} className="w-full h-full" />;
+        return (
+            <div className="relative w-full h-full">
+                <div ref={containerRef} className="w-full h-full" />
+                <GameOverScreen />
+            </div>
+        );
     },
 );
 
